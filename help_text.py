@@ -1,0 +1,5 @@
+TAB1_TEXT = "tab1帮助"
+TAB2_TEXT = "tab2帮助"
+TAB3_TEXT = "tab3帮助"
+TAB4_TEXT = "tab4帮助"
+TAB5_TEXT = "tab5帮助"
