@@ -12,6 +12,7 @@ import help_text
 import s_checkbox
 import os
 import shutil
+import time
 
 
 class Tab1(object):  # 配置config.txt
@@ -527,6 +528,7 @@ class Tab2(object):  # 准备配体
                     # 更改标签文字
                     label_text = "%i/%i" % (i + 1, len(input_ligands))
                     self.progress_label.label.configure(text=label_text)
+                    self.progress_label.label.update()
 
                     # 更新进度条
                     self.progress["value"] = i + 1
@@ -557,6 +559,7 @@ class Tab2(object):  # 准备配体
 
                     label_text = "%i/%i" % (i + 1, len(input_ligands))
                     self.progress_label.label.configure(text=label_text)
+                    self.progress_label.label.update()
 
                     self.progress["value"] = i + 1
                     self.progress.update()
@@ -571,6 +574,7 @@ class Tab2(object):  # 准备配体
                     # 更改标签文字
                     label_text = "%i/%i" % (i + 1, len(input_ligands))
                     self.progress_label.label.configure(text=label_text)
+                    self.progress_label.label.update()
 
                     # 更新进度条
                     self.progress["value"] = i + 1 + len(input_ligands)
@@ -604,6 +608,7 @@ class Tab2(object):  # 准备配体
 
                     label_text = "%i/%i" % (i + 1, len(input_ligands))
                     self.progress_label.label.configure(text=label_text)
+                    self.progress_label.label.update()
 
                     self.progress["value"] = i + 1
                     self.progress.update()
@@ -619,6 +624,7 @@ class Tab2(object):  # 准备配体
                     # 更改标签文字
                     label_text = "%i/%i" % (i + 1, len(input_ligands))
                     self.progress_label.label.configure(text=label_text)
+                    self.progress_label.label.update()
 
                     # 更新进度条
                     self.progress["value"] = i + 1 + len(input_ligands)
@@ -642,6 +648,7 @@ class Tab2(object):  # 准备配体
 
                             label_text = "%s/%s" % (i + 1, len(input_ligands))
                             self.progress_label.label.configure(text=label_text)
+                            self.progress_label.label.update()
 
                             self.progress["value"] = i + 1
                             self.progress.update()
@@ -660,6 +667,7 @@ class Tab2(object):  # 准备配体
 
                             label_text = "%s/%s" % (i + 1, len(input_ligands))
                             self.progress_label.label.configure(text=label_text)
+                            self.progress_label.label.update()
 
                             self.progress["value"] = i + 1
                             self.progress.update()
@@ -679,6 +687,7 @@ class Tab2(object):  # 准备配体
 
                             label_text = "%s/%s" % (i + 1, len(input_ligands))
                             self.progress_label.label.configure(text=label_text)
+                            self.progress_label.label.update()
 
                             self.progress["value"] = i + 1
                             self.progress.update()
@@ -697,6 +706,7 @@ class Tab2(object):  # 准备配体
 
                             label_text = "%s/%s" % (i + 1, len(input_ligands))
                             self.progress_label.label.configure(text=label_text)
+                            self.progress_label.label.update()
 
                             self.progress["value"] = i + 1
                             self.progress.update()
@@ -807,8 +817,143 @@ class Tab4(object):  # 分子对接
         self.current_time_frame.place(x=430, y=text_y)
         self.current_time = s_label.SLabel(root=self.current_time_frame, text="", x=0, y=0)
 
-    def _docking(self):
-        return
+    def _docking(self, event):
+        input_ligands_full = self.choose_ligand_entry.entry.get()
+        receptor_dir = self.choose_proteins_entry.entry.get()
+        output_dir = self.choose_output_entry.entry.get()
+        docking_times = self.times_entry.entry.get()
+
+        # 所有选择的路径和文件都不能为空。
+        if input_ligands_full == "" or receptor_dir == "" or output_dir == "" or docking_times == "":
+            messagebox.showerror("错误！", "输入不能为空！")
+            return
+
+        # 不能包括空格
+        if input_ligands_full.count(" ") > 0:
+            messagebox.showerror("错误！", "配体路径不能包含空格！")
+            return
+        if receptor_dir.count(" ") > 0:
+            messagebox.showerror("错误！", "受体路径不能包含空格！")
+            return
+        if output_dir.count(" ") > 0:
+            messagebox.showerror("错误！", "输出路径不能包含空格！")
+            return
+        if docking_times.count(" ") > 0:
+            messagebox.showerror("错误！", "请输入每个配体要对接的次数！")
+            return
+
+        try:
+            times = int(docking_times)
+        except ValueError:
+            messagebox.showerror("错误！", "对接次数必须是数字！")
+            return
+
+        input_ligands = []
+
+        # 输入的配体
+        if input_ligands_full.endswith(";"):  # 如果是单个或者多个配体
+            if input_ligands_full.split(".")[-1][0:-1] != "pdbqt":  # 必须是pdbqt文件
+                messagebox.showerror("错误！", "配体必须是pdbqt格式！")
+                return
+            input_ligands.extend(input_ligands_full.split(";")[0:-1])
+        elif os.path.isdir(input_ligands_full):  # 如果选择的是目录
+            list_file = os.listdir(input_ligands_full)
+            for file in list_file:
+                if file.endswith("pdbqt"):
+                    input_ligands.append(input_ligands_full + "/" + file)
+            if len(input_ligands) == 0:
+                messagebox.showerror("错误！", "所选文件夹中不包含pdbqt格式的配体！")
+                return
+        else:
+            messagebox.showerror("错误！", "请检查输入的配体！")
+            return
+
+        # 输入的受体
+        receptors = []
+        configs = []
+        if os.path.exists("%s/preped.pdbqt" % receptor_dir):  # 选择了一个受体
+            if not os.path.exists("%s/config.txt" % receptor_dir):
+                messagebox.showerror("错误！", "受体中没有config.txt文件！")
+                return
+            receptors.append("%s/preped.pdbqt" % receptor_dir)
+            configs.append("%s/config.txt" % receptor_dir)
+        else:  # 可能选择了多个受体
+            if not os.path.exists(receptor_dir):
+                messagebox.showerror("错误！", "所选受体目录不存在！")
+                return
+            child_receptor = os.listdir(receptor_dir)
+            for receptor in child_receptor:
+                if os.path.exists("%s/%s/preped.pdbqt" % (receptor_dir, receptor)):
+                    if not os.path.exists("%s/%s/config.txt" % (receptor_dir, receptor)):
+                        messagebox.showwarning("警告！", "受体%s中没有config.txt文件，将不进行对接！" % receptor)
+                        continue
+                    receptors.append("%s/%s/preped.pdbqt" % (receptor_dir, receptor))
+                    configs.append("%s/%s/config.txt" % (receptor_dir, receptor))
+        if len(receptors) == 0:
+            messagebox.showerror("错误！", "没有受体，请检查选择的文件夹或者子文件夹中是否"
+                                        "包含preped.pdbqt文件!")
+            return
+
+        self.progress["maximum"] = len(receptors) * len(input_ligands)
+        for receptor in receptors:
+            # 在输出目录创建受体的文件夹
+            output_dir_r = "%s/%s" % (output_dir, receptor.split("/")[-2])
+            if not os.path.exists(output_dir_r):
+                os.mkdir(output_dir_r)
+
+            for ligand in input_ligands:
+                # 初始化循环次数
+                i = 0
+
+                # 更新进度条和标签
+                current_num = receptors.index(receptor) * len(input_ligands) + input_ligands.index(ligand) + 1
+                max_num = len(receptors) * len(input_ligands)
+                label_text = "%s/%s" % (current_num, max_num)
+
+                self.progress_label.label.configure(text=label_text)
+                self.progress_label.label.update()
+
+                self.progress["value"] = current_num
+                self.progress.update()
+
+                current_protein = "当前受体：%s" % receptor.split("/")[-2]
+                self.current_protein.label.configure(text=current_protein)
+                self.current_protein.label.update()
+
+                current_ligand = "当前配体：%s" % ligand.split("/")[-1].split(".")[0]
+                self.current_ligand.label.configure(text=current_ligand)
+                self.current_ligand.label.update()
+
+                current_time = "当前次数：%i" % (i+1)
+                self.current_time.label.configure(text=current_time)
+                self.current_time.label.update()
+
+                time.sleep(0.5)
+                # 开始对接
+                while i < times:
+                    ligand_basename = ligand.split("/")[-1].split(".")[0]
+                    output = "%s/%s_out%s.pdbqt" % (output_dir_r, ligand_basename, i + 1)
+                    command = "vina --ligand %s --receptor %s --config %s --out %s" % (ligand,
+                                                                                       receptor,
+                                                                                       configs[receptors.index(receptor)],
+                                                                                       output)
+                    os.system(command)
+                    i += 1
+        messagebox.showinfo("成功！", "对接完成！")
+        self.progress_label.label.configure(text="没有任务")
+        self.progress_label.label.update()
+
+        self.progress["value"] = 0
+        self.progress.update()
+
+        self.current_protein.label.configure(text="")
+        self.current_protein.label.update()
+
+        self.current_ligand.label.configure(text="")
+        self.current_ligand.label.update()
+
+        self.current_time.label.configure(text="")
+        self.current_time.label.update()
 
     def save_para(self):
         self.config.para_dict["choose_docking_ligands"] = self.choose_ligand_entry.textvariable.get()
