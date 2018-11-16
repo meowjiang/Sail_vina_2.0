@@ -52,7 +52,7 @@ class MainWindows(object):
         self.notebook.add(self.tab6, text="关于")
 
         # 默认显示卡
-        self.notebook.select(tab_id=3)
+        self.notebook.select(tab_id=0)
 
         self.notebook.place(x=10, y=10, width=600, height=360)
 

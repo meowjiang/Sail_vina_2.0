@@ -21,5 +21,5 @@ ligand_output_dir=D:/Desktop
 python_path=C:/DrugDesign/mgltools/python.exe
 choose_docking_ligands=D:/Vina_Dock/Ligands/pdbqt/1M17.pdbqt;
 choose_docking_proteins=D:/Vina_Dock/Proteins/1M17_EGFR
-choose_docking_output=D:/Desktop
+choose_docking_output=D:/Deskto
 docking_times=1

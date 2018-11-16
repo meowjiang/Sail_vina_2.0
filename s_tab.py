@@ -848,6 +848,10 @@ class Tab4(object):  # 分子对接
             messagebox.showerror("错误！", "对接次数必须是数字！")
             return
 
+        if not os.path.exists(output_dir):
+            messagebox.showerror("错误！", "输出的路径不存在！")
+            return
+
         input_ligands = []
 
         # 输入的配体
