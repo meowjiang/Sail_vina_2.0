@@ -928,7 +928,7 @@ class Tab4(object):  # 分子对接
                 self.current_ligand.label.configure(text=current_ligand)
                 self.current_ligand.label.update()
 
-                current_time = "当前次数：%i" % (i+1)
+                current_time = "当前次数：%i" % (i + 1)
                 self.current_time.label.configure(text=current_time)
                 self.current_time.label.update()
 
@@ -937,10 +937,12 @@ class Tab4(object):  # 分子对接
                 while i < times:
                     ligand_basename = ligand.split("/")[-1].split(".")[0]
                     output = "%s/%s_out%s.pdbqt" % (output_dir_r, ligand_basename, i + 1)
-                    command = "vina --ligand %s --receptor %s --config %s --out %s" % (ligand,
-                                                                                       receptor,
-                                                                                       configs[receptors.index(receptor)],
-                                                                                       output)
+                    vina_path = os.path.realpath(__file__) + "/../res/vina.exe"
+                    command = "%s --ligand %s --receptor %s --config %s --out %s" % (vina_path,
+                                                                                     ligand,
+                                                                                     receptor,
+                                                                                     configs[receptors.index(receptor)],
+                                                                                     output)
                     os.system(command)
                     i += 1
         messagebox.showinfo("成功！", "对接完成！")
