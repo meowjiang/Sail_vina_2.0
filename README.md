@@ -38,4 +38,4 @@ Autodock Vina对接GUI界面
 - 安装ADT  
 [ADT下载](http://mgltools.scripps.edu/downloads/downloads/tars/releases/REL1.5.6/mgltools_win32_1.5.6_Setup.exe)
 ---
-###教程：伊马替尼以及自定义配体和络氨酸激酶对接
+### 教程：伊马替尼以及自定义配体和络氨酸激酶对接
