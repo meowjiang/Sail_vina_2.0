@@ -29,7 +29,7 @@ Autodock Vina对接GUI界面
   -->下方"系统变量"找到变量名Path-->选中点击"编辑"-->点击"浏览"-->选择C:\OpenBabel-2.4.1-->点击确定即可
     3. 按下"win+r"，输入“cmd"。在命令行输入obabel
  出现如下结果则设置成功  
- ![obabel]()
+ ![obabel](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/cmd_obabel.jpg)
   
 - 安装ADT  
 [ADT下载](http://mgltools.scripps.edu/downloads/downloads/tars/releases/REL1.5.6/mgltools_win32_1.5.6_Setup.exe)
@@ -42,12 +42,14 @@ Autodock Vina对接GUI界面
 本教程文件夹目录：  
 D:/test_sailvina/Ligands/mol  
 D:/test_sailvina/Ligands/pdbqt  
-D:/test_sailvina/Proteins/1IEP_imatinib  D:/test_sailvina/Docking_output  
+D:/test_sailvina/Proteins/1IEP_imatinib  
+D:/test_sailvina/Docking_output  
 
 1. 去pdbbank[下载1IEP](https://files.rcsb.org/download/1IEP.pdb)蛋白文件放置到D:/test_sailvina/Proteins/1IEP_imatinib
 文件夹下
-![picture](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/pdb_bank.jpg)
-2. 使用autodock tools导出共晶配体，准备受体文件。  
+![pdb](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/pdb_bank.jpg)
+2. 使用autodock tools导出共晶配体，准备受体文件。 
+    - 打开ADT，导入刚下载的蛋白 
     - Edit - delete water
     - 选择B链, 然后Edit - Delete - Delete Selected Atoms。（因为AB同源，保留A链进行对接即可）
     - 选择A链中的CL1、CL2、CL4、CL5，同上删除。（删除氯离子）
@@ -57,26 +59,26 @@ D:/test_sailvina/Proteins/1IEP_imatinib  D:/test_sailvina/Docking_output
     - Ligand - Output - Save as PDBQT（导出共晶配体）
     保存共晶配体到D:/test_sailvina/Proteins/1IEP_imatinib/co_cystal.pdbqt（
     ADT的Bug，这里需要手动输入后缀）
-    - Grid - Macromolecule - Choose - 弹出选择框 - 双击1iep_copy1 - 确定（一般弹出-contains no non-bonded atoms表示受体没有问题） - 选择D:/test_sailvina/Proteins/1IEP_imatinib/preped.pdbqt保存（受体一定要保存成这个名字，否则无法
-    识别）
+    - Grid - Macromolecule - Choose - 弹出选择框 - 双击1iep_copy1 - 确定（一般弹出-contains no non-bonded atoms表示受体没有问题） - 选择D:/test_sailvina/Proteins/1IEP_imatinib/preped.pdbqt保存（受体一定要保存成这个名字，否则无法识别）
     - 关闭ADT
 3. 生成对接配置文件
     - 打开SailVina
     - 在“准备对接配置”选项卡的“工具”中点击读取共晶配体。选择D:/test_sailvina/Proteins/1IEP_imatinib/co_cystal.pdbqt
-    - 点击计算对接位点 - 确定，参数会变成如下  
-    ![co_ligand]()
+    - 点击计算对接位点 - 确定，参数会变成如下（由于盒子总大小不能超过27000，所以如果过大需要根据实际需求修改盒子大小）  
+    ![co_ligand](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/load_co_ligand.jpg)
     - 点击选择输出目录，选择D:/test_sailvina/Proteins/1IEP_imatinib，点击输出 - 确定
 4. 准备配体
     - 使用化学作图软件（Chemdraw等）绘制出要对接的配体，保存成mol格式。（作为对接的验证，需要重新绘制原始共晶配体进行再对接re-docking，根据rmsd来判断对接的可靠程度。）本教程绘制2个，伊马替尼和尼洛替尼。保存到D:/test_sailvina/Ligands/mol文件夹中
     - 在SailVina“准备配体”选项卡中，按照下图配置参数。（脚本配置中的ADT的python路径请选择自己安装的路径）  
-    ![preped_ligand]()
+    ![preped_ligand](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/preped_ligands.jpg)
     - 点击“开始转换”等待完成即可。
 5. 分子对接
     - 在“分子对接选项”卡中按照下图选择  
-    ![docking]()  
+    ![docking](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/docking.jpg)  
     - 点击“开始对接”即可进行对接。（由于Vina对接会消耗大量CPU资源，如果出现未响应为正常现象，请等待对接完成）  
-    ![docking_process]()
+    ![docking_process](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/docking_process.jpg)
 6. 结果分析
     - 目前处于开发阶段，对接结果保存在Docking_output文件夹中，可自行查看分析。  
-    ![docking_result]()  
-    图中绿色为对接配体，蓝色为原始共晶配体，可以看到对接结果还是比较可靠的。查看作用力，rmsd计算将在后续版本提供。
+    ![docking_result](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/docking_result.jpg)  
+    图中绿色为对接配体，蓝色为原始共晶配体，可以看到对接结果还是比较可靠的。  
+    查看作用力，rmsd计算将在后续版本提供。
