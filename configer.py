@@ -1,5 +1,6 @@
 import os
 import sys
+from tkinter import messagebox
 
 
 class Configer(object):
@@ -9,6 +10,9 @@ class Configer(object):
 
     @staticmethod
     def first_open():
+        obabel_cmd = os.popen("obabel").read()
+        if "Usage" not in obabel_cmd:
+            messagebox.showwarning("警告！", "检测到obabel没有在环境变量中，无法进行格式转换！")
         if not os.path.exists(os.path.realpath(sys.argv[0]) + "/../para.txt"):
             with open(os.path.realpath(sys.argv[0]) + "/../para.txt", "w") as f:
                 initial_value = "center_x=0.0\n" \

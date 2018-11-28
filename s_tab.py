@@ -445,6 +445,11 @@ class Tab2(object):  # 准备配体
         self.convert_button.button.bind("<Button-1>", self._start_convert)
 
     def _start_convert(self, event):
+        obabel_cmd = os.popen("obabel").read()
+        if "Usage" not in obabel_cmd:
+            messagebox.showerror("错误！", "obabel不在环境变量中，请设置环境变量并重启本软件才能进行格式转换！")
+            return
+
         input_files = self.choose_ligands_entry.textvariable.get()
 
         # 判断输入内容不能包含空格
@@ -587,6 +592,29 @@ class Tab2(object):  # 准备配体
                 self.progress["value"] = 0
                 self.progress_label.label.configure(text="没有任务")
                 return
+
+        elif input_format == "pdb" and output_format == "pdbqt":  # pdb->pdbqt
+            print("使用ADT脚本将pdb转换成pdbqt")
+            i = 0
+            while i < len(input_ligands):
+                command = "%s %s -l %s -o %s" % (python_path, pdb_to_pdbqt_path,
+                                                 input_ligands[i], output_ligands[i])
+
+                # 更改标签文字
+                label_text = "%i/%i" % (i + 1, len(input_ligands))
+                self.progress_label.label.configure(text=label_text)
+                self.progress_label.label.update()
+
+                # 更新进度条
+                self.progress["value"] = i + 1 + len(input_ligands)
+                self.progress.update()
+
+                os.system(command)
+                i += 1
+            messagebox.showinfo("转换完成！", "成功将%s转换pdbqt！" % input_format)
+            self.progress["value"] = 0
+            self.progress_label.label.configure(text="没有任务")
+            return
 
         else:  # 输入不是pdbqt
             if output_format == "pdbqt":
