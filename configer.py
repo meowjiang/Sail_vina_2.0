@@ -39,7 +39,10 @@ class Configer(object):
                                 "choose_docking_ligands=\n" \
                                 "choose_docking_proteins=\n" \
                                 "choose_docking_output=\n" \
-                                "docking_times=1\n"
+                                "docking_times=1\n" \
+                                "complex_ligand_format=\n" \
+                                "complex_ligand_num=1\n" \
+                                "choose_complex_ligands=\n"
                 f.write(initial_value)
 
     @staticmethod

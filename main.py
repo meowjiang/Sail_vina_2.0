@@ -48,11 +48,11 @@ class MainWindows(object):
         self.notebook.add(self.tab2, text="准备配体")
         self.notebook.add(self.tab3, text="准备受体")
         self.notebook.add(self.tab4, text="分子对接")
-        self.notebook.add(self.tab5, text="结果分析")
+        self.notebook.add(self.tab5, text="生成复合物")
         self.notebook.add(self.tab6, text="关于")
 
         # 默认显示卡
-        self.notebook.select(tab_id=0)
+        self.notebook.select(tab_id=4)
 
         self.notebook.place(x=10, y=10, width=600, height=360)
 
@@ -61,6 +61,7 @@ class MainWindows(object):
             tab1.save_para()
             tab2.save_para()
             tab4.save_para()
+            tab5.save_para()
             self.config.save_para()
             self.main_window.destroy()
 

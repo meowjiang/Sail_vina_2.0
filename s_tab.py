@@ -1007,9 +1007,67 @@ class Tab3(object):
 class Tab5(object):
 
     def __init__(self, tab, config):
+        self.root = tab
         self.config = config
-        self.label1 = Label(tab, text="开发中……")
-        self.label1.grid()
+
+        self._choose_ligand_frame()
+        self._choose_protein_frame()
+        self._choose_output_frame()
+
+        # 帮助按钮
+        self.help_button = s_button.HelpButton(root=self.root, help_text=help_text.TAB5_TEXT, x=410, y=300, width=80)
+        tooltip.create_tooltip(self.help_button.help_button, "获取帮助")
+
+    def _choose_ligand_frame(self):
+        self.choose_ligand_labelframe = LabelFrame(self.root, text="选择配体")
+        self.choose_ligand_labelframe.place(x=10, y=10, width=570, height=85)
+
+        # 选择输入配体的格式
+        s_label.SLabel(root=self.choose_ligand_labelframe, text="输入格式：",
+                       x=10, y=0)
+        input_format_text = ("pdbqt", "sdf", "mol2", "pdb")
+        self.input_format = s_combobox.SCombbox(root=self.choose_ligand_labelframe, textvariable=StringVar(),
+                                                values=input_format_text,
+                                                default_value=configer.Configer.get_para("complex_ligand_format"),
+                                                x=80, y=0, width=60)
+        tooltip.create_tooltip(self.input_format.combobox, "导入配体的格式")
+
+        # 选择第几个配体
+        s_label.SLabel(root=self.choose_ligand_labelframe, text="选择第",
+                       x=160, y=0)
+        self.complex_ligand_num_entry = s_entry.SEntry(self.choose_ligand_labelframe, textvariable=StringVar(),
+                                                       text=configer.Configer.get_para("complex_ligand_num"),
+                                                       x=205, y=2, width=20)
+        tooltip.create_tooltip(self.complex_ligand_num_entry.entry, "如果每个配体只有一个构象填1即可，"
+                                                                    "如果是对接的结果包含多个构象，根据需求选择。")
+        s_label.SLabel(root=self.choose_ligand_labelframe, text="个构象",
+                       x=230, y=0)
+
+        # 选择配体
+        self.choose_ligands_button = s_button.SButton(self.choose_ligand_labelframe, text="选择单/多个配体", x=10, y=30)
+        tooltip.create_tooltip(self.choose_ligands_button.button, "选择一个或者多个所选格式的配体")
+        self.choose_ligand_dir_button = s_button.SButton(self.choose_ligand_labelframe, text="选择文件夹", x=110, y=30)
+        tooltip.create_tooltip(self.choose_ligand_dir_button.button, "选择包含配体的文件夹，匹配其中所选格式的文件")
+        self.choose_ligands_entry = s_entry.SEntry(root=self.choose_ligand_labelframe, textvariable=StringVar(),
+                                                   text=configer.Configer.get_para("choose_complex_ligands"),
+                                                   x=200, y=34, width=360)
+        tooltip.create_tooltip(self.choose_ligands_entry.entry, "所选的配体或者包含配体的目录")
+        self.choose_ligands_button.bind_open_files(entry_text=self.choose_ligands_entry.textvariable,
+                                                   title="选择单/多个配体",
+                                                   file_type=self.input_format.textvariable)
+        self.choose_ligand_dir_button.bind_open_dir(entry_text=self.choose_ligands_entry.textvariable,
+                                                    title="选择包含配体文件的文件夹")
+
+    def _choose_protein_frame(self):
+        pass
+
+    def _choose_output_frame(self):
+        pass
+
+    def save_para(self):
+        self.config.para_dict["complex_ligand_format"] = self.input_format.textvariable.get()
+        self.config.para_dict["complex_ligand_num"] = self.complex_ligand_num_entry.textvariable.get()
+        self.config.para_dict["choose_complex_ligands"] = self.choose_ligands_entry.textvariable.get()
 
 
 class Tab6(object):
