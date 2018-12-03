@@ -795,7 +795,7 @@ class Tab4(object):  # 分子对接
                                                     x=110, y=4, width=450)
         tooltip.create_tooltip(self.choose_proteins_entry.entry, "包含受体的文件夹")
         self.choose_proteins.bind_open_dir(entry_text=self.choose_proteins_entry.textvariable,
-                                           title="选择包含pdbqt配体的文件夹")
+                                           title="选择包含pdbqt受体的文件夹")
 
     def _choose_output_frame(self):
         self.choose_output_labelframe = LabelFrame(self.root, text="结果输出")
@@ -1013,6 +1013,7 @@ class Tab5(object):
         self._choose_ligand_frame()
         self._choose_protein_frame()
         self._choose_output_frame()
+        self._start_join()
 
         # 帮助按钮
         self.help_button = s_button.HelpButton(root=self.root, help_text=help_text.TAB5_TEXT, x=410, y=300, width=80)
@@ -1038,10 +1039,18 @@ class Tab5(object):
         self.complex_ligand_num_entry = s_entry.SEntry(self.choose_ligand_labelframe, textvariable=StringVar(),
                                                        text=configer.Configer.get_para("complex_ligand_num"),
                                                        x=205, y=2, width=20)
-        tooltip.create_tooltip(self.complex_ligand_num_entry.entry, "如果每个配体只有一个构象填1即可，"
-                                                                    "如果是对接的结果包含多个构象，根据需求选择。")
+        tooltip.create_tooltip(self.complex_ligand_num_entry.entry, "只针对多构象pdbqt文件。输入"
+                                                                    "要进行复合的构象")
         s_label.SLabel(root=self.choose_ligand_labelframe, text="个构象",
                        x=230, y=0)
+
+        # 是否保留提取配体
+        self.remain_ligand = s_checkbox.SCheckbutton(self.choose_ligand_labelframe,
+                                                     text="保留提取构象", variable=StringVar(),
+                                                     value=configer.Configer.get_para("remain_ligand"),
+                                                     x=280, y=0)
+        tooltip.create_tooltip(self.remain_ligand.checkbutton, "只针对多构象pdbqt文件。"
+                                                               "保留提取的构象。")
 
         # 选择配体
         self.choose_ligands_button = s_button.SButton(self.choose_ligand_labelframe, text="选择单/多个配体", x=10, y=30)
@@ -1059,15 +1068,123 @@ class Tab5(object):
                                                     title="选择包含配体文件的文件夹")
 
     def _choose_protein_frame(self):
-        pass
+        self.choose_protein_labelframe = LabelFrame(self.root, text="选择受体")
+        self.choose_protein_labelframe.place(x=10, y=100, width=570, height=50)
+
+        self.choose_proteins = s_button.SButton(root=self.choose_protein_labelframe, text="选择受体", x=10, y=0)
+        tooltip.create_tooltip(self.choose_proteins.button, "选择受体")
+        self.choose_proteins_entry = s_entry.SEntry(root=self.choose_protein_labelframe, textvariable=StringVar(),
+                                                    text=configer.Configer.get_para("choose_complex_proteins"),
+                                                    x=110, y=4, width=450)
+        tooltip.create_tooltip(self.choose_proteins_entry.entry, "包含受体的文件夹")
+        self.choose_proteins.bind_open_file(entry_text=self.choose_proteins_entry.textvariable,
+                                            title="选择蛋白受体", file_type="pdbqt")
 
     def _choose_output_frame(self):
-        pass
+        self.choose_output_labelframe = LabelFrame(self.root, text="复合物输出")
+        self.choose_output_labelframe.place(x=10, y=155, width=570, height=50)
+
+        self.choose_output = s_button.SButton(root=self.choose_output_labelframe, text="选择输出文件夹", x=10, y=0)
+        tooltip.create_tooltip(self.choose_output.button, "选择复合物输出目录")
+        self.choose_output_entry = s_entry.SEntry(root=self.choose_output_labelframe, textvariable=StringVar(),
+                                                  text=configer.Configer.get_para("choose_complex_output"),
+                                                  x=110, y=4, width=450)
+        tooltip.create_tooltip(self.choose_output_entry.entry, "所选的复合物输出目录")
+        self.choose_output.bind_open_dir(entry_text=self.choose_output_entry.textvariable,
+                                         title="选择复合物输出的文件夹")
+
+    def _start_join(self):
+        y = 220
+        self.docking_button = s_button.SButton(root=self.root, text="结合", x=10, y=y)
+        tooltip.create_tooltip(self.docking_button.button, "将配体和受体结合成一个文件")
+        self.docking_button.button.bind("<Button-1>", self._join)
+
+        self.progress = Progressbar(self.root, mode="determinate")
+        self.progress.place(x=100, y=y + 2, width=400)
+        tooltip.create_tooltip(self.progress, "结合进度")
+
+        self.progress_label = s_label.SLabel(self.root, text="没有任务", x=510, y=y)
+
+        text_y = 256
+        self.current_protein_frame = Frame(self.root, width=200, height=40)
+        self.current_protein_frame.place(x=10, y=text_y)
+        self.current_protein = s_label.SLabel(root=self.current_protein_frame, text="当前配体：", x=0, y=0)
+
+    def _join(self, event):
+        input_format = self.input_format.textvariable.get()
+        input_ligands_full = self.choose_ligands_entry.entry.get()
+        input_receptor = self.choose_proteins_entry.entry.get()
+        output_dir = self.choose_output_entry.entry.get()
+        choose_num = self.complex_ligand_num_entry.entry.get()
+        remain = self.remain_ligand.variable.get()
+
+        # 所有选择的路径和文件都不能为空。
+        if input_ligands_full == "" or input_receptor == "" or output_dir == "":
+            messagebox.showerror("错误！", "输入不能为空！")
+            return
+
+        # 不能包括空格
+        if input_ligands_full.count(" ") > 0:
+            messagebox.showerror("错误！", "配体路径不能包含空格！")
+            return
+        if input_receptor.count(" ") > 0:
+            messagebox.showerror("错误！", "受体路径不能包含空格！")
+            return
+        if output_dir.count(" ") > 0:
+            messagebox.showerror("错误！", "输出路径不能包含空格！")
+            return
+
+        # 选择构象要是数字
+        try:
+            num = int(choose_num)
+        except ValueError:
+            messagebox.showerror("错误！", "提取的构象必须是数字！")
+            return
+
+        # 输出路径必须存在
+        if not os.path.exists(output_dir):
+            messagebox.showerror("错误！", "输出的路径不存在！")
+            return
+
+        input_ligands = []
+
+        # 输入的配体
+        if input_ligands_full.endswith(";"):  # 如果是单个或者多个配体
+            if input_ligands_full.split(".")[-1][0:-1] != input_format:  # 格式不匹配
+                messagebox.showerror("错误！", "配体格式不是所选格式！")
+                return
+            input_ligands.extend(input_ligands_full.split(";")[0:-1])
+        elif os.path.isdir(input_ligands_full):  # 如果选择的是目录
+            list_file = os.listdir(input_ligands_full)
+            for file in list_file:
+                if file.endswith(input_format):
+                    input_ligands.append(input_ligands_full + "/" + file)
+            if len(input_ligands) == 0:
+                messagebox.showerror("错误！", "所选文件夹中不包含%s格式的配体！" % input_format)
+                return
+        else:
+            messagebox.showerror("错误！", "请检查输入的配体！")
+            return
+
+        if input_format == "pdbqt":
+            if remain == "1":
+                pass
+            else:
+                pass
+        else:
+            for ligand in input_ligands:
+                output_name = ligand.split("/")[-1].split(".")[0] + "_" + input_receptor.split("/")[-1].split(".")[0] + ".pdb"
+                output = output_dir + "/" + output_name
+                command = "obabel %s %s -O %s -j" % (ligand, input_receptor, output)
+                os.system(command)
 
     def save_para(self):
         self.config.para_dict["complex_ligand_format"] = self.input_format.textvariable.get()
         self.config.para_dict["complex_ligand_num"] = self.complex_ligand_num_entry.textvariable.get()
         self.config.para_dict["choose_complex_ligands"] = self.choose_ligands_entry.textvariable.get()
+        self.config.para_dict["remain_ligand"] = self.remain_ligand.variable.get()
+        self.config.para_dict["choose_complex_proteins"] = self.choose_proteins_entry.textvariable.get()
+        self.config.para_dict["choose_complex_output"] = self.choose_output_entry.textvariable.get()
 
 
 class Tab6(object):
