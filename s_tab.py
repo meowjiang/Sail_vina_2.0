@@ -510,6 +510,13 @@ class Tab2(object):  # 准备配体
         pdbqt_to_pdb_path = os.path.realpath(__file__) + "/../res/pdbqt_to_pdb.py"
         pdb_to_pdbqt_path = os.path.realpath(__file__) + "/../res/prepare_ligand4.py"
 
+        # 检查pthon路径是否正确
+        check_cmd = "%s %s" % (python_path, pdbqt_to_pdb_path)
+        state = os.system(check_cmd)
+        if state == 1:
+            messagebox.showerror("python路径错误！", "请确定选择的是安装adt软件的python.exe！")
+            return
+
         for ligand in input_ligands:
             ligand_name = ligand.split("/")[-1].split(".")[0] + "." + output_format
             output_ligands.append(output_path + "/" + ligand_name)
@@ -1072,11 +1079,11 @@ class Tab5(object):
         self.choose_protein_labelframe.place(x=10, y=100, width=570, height=50)
 
         self.choose_proteins = s_button.SButton(root=self.choose_protein_labelframe, text="选择受体", x=10, y=0)
-        tooltip.create_tooltip(self.choose_proteins.button, "选择受体")
+        tooltip.create_tooltip(self.choose_proteins.button, "选择pdbqt格式的受体")
         self.choose_proteins_entry = s_entry.SEntry(root=self.choose_protein_labelframe, textvariable=StringVar(),
                                                     text=configer.Configer.get_para("choose_complex_proteins"),
                                                     x=110, y=4, width=450)
-        tooltip.create_tooltip(self.choose_proteins_entry.entry, "包含受体的文件夹")
+        tooltip.create_tooltip(self.choose_proteins_entry.entry, "受体文件")
         self.choose_proteins.bind_open_file(entry_text=self.choose_proteins_entry.textvariable,
                                             title="选择蛋白受体", file_type="pdbqt")
 
@@ -1106,9 +1113,9 @@ class Tab5(object):
         self.progress_label = s_label.SLabel(self.root, text="没有任务", x=510, y=y)
 
         text_y = 256
-        self.current_protein_frame = Frame(self.root, width=200, height=40)
-        self.current_protein_frame.place(x=10, y=text_y)
-        self.current_protein = s_label.SLabel(root=self.current_protein_frame, text="当前配体：", x=0, y=0)
+        self.current_ligand_frame = Frame(self.root, width=400, height=40)
+        self.current_ligand_frame.place(x=10, y=text_y)
+        self.current_ligand = s_label.SLabel(root=self.current_ligand_frame, text="", x=0, y=0)
 
     def _join(self, event):
         input_format = self.input_format.textvariable.get()
@@ -1146,6 +1153,11 @@ class Tab5(object):
             messagebox.showerror("错误！", "输出的路径不存在！")
             return
 
+        # 受体格式必须是pdbqt
+        if not input_receptor.endswith(".pdbqt"):
+            messagebox.showerror("错误！", "输入的受体必须是pdbqt格式。")
+            return
+
         input_ligands = []
 
         # 输入的配体
@@ -1166,17 +1178,119 @@ class Tab5(object):
             messagebox.showerror("错误！", "请检查输入的配体！")
             return
 
+        python_path = configer.Configer.get_para("python_path")
+        pdbqt_to_pdb_path = os.path.realpath(__file__) + "/../res/pdbqt_to_pdb.py"
+
+        # 检查python路径是否正确
+        check_cmd = "%s %s" % (python_path, pdbqt_to_pdb_path)
+        state = os.system(check_cmd)
+        if state == 1:
+            messagebox.showerror("python路径错误！", "请确定选择的是安装adt软件的python.exe！")
+            return
+
+        self.progress_label.label.configure(text="准备受体")
+        self.progress_label.label.update()
+
+        # 将受体pdbqt转成pdb
+        input_pdb = output_dir + "/" + input_receptor.split(".")[0].split("/")[-1] + ".pdb"
+        command = "%s %s -f %s -o %s" % (python_path, pdbqt_to_pdb_path,
+                                         input_receptor, input_pdb)
+        os.system(command)
+
+        ligands = []
+
+        self.progress_label.label.configure(text="准备配体")
+        self.progress_label.label.update()
+
         if input_format == "pdbqt":
-            if remain == "1":
-                pass
-            else:
-                pass
-        else:
+            os.mkdir(output_dir)
             for ligand in input_ligands:
-                output_name = ligand.split("/")[-1].split(".")[0] + "_" + input_receptor.split("/")[-1].split(".")[0] + ".pdb"
-                output = output_dir + "/" + output_name
-                command = "obabel %s %s -O %s -j" % (ligand, input_receptor, output)
-                os.system(command)
+                # 是否是单个配体:
+                with open(ligand, "r") as f:
+                    line = f.readline()
+                    if "MODEL" not in line:
+                        # 只有一个，直接转换成pdb
+                        pdb_ligand = output_dir + "/" + ligand.split(".")[0].split("/")[-1] + ".pdb"
+                        command = "%s %s -f %s -o %s" % (python_path, pdbqt_to_pdb_path,
+                                                         ligand, pdb_ligand)
+                        os.system(command)
+                        ligands.append(pdb_ligand)
+                    else:
+                        # 指针归位
+                        f.seek(0)
+                        # 有多个，提取之后转pdb
+                        first_lines = []
+                        last_lines = []
+                        for (line_num, line_value) in enumerate(f):
+                            if line_value.startswith("MODEL"):
+                                first_lines.append(line_num)
+                            if line_value == "ENDMDL\n":
+                                last_lines.append(line_num)
+
+                        # 如果选择构象大于实际构象
+                        try:
+                            first_line = first_lines[num - 1]
+                            last_line = last_lines[num - 1] + 1
+                            max_num = choose_num
+                        except IndexError:
+                            first_line = first_lines[-1]
+                            last_line = last_lines[-1] + 1
+                            max_num = str(len(first_lines))
+
+                        f.seek(0)
+                        splited_molecule = f.readlines()[first_line:last_line]
+                        output_pdbqt = output_dir + "/" + ligand.split(".")[0].split("/")[
+                            -1] + "_" + max_num + ".pdbqt"
+                        with open(output_pdbqt, "w") as writer:
+                            writer.writelines(splited_molecule)
+                        output_pdb = output_dir + "/" + ligand.split(".")[0].split("/")[
+                            -1] + "_" + max_num + ".pdb"
+                        command = "%s %s -f %s -o %s" % (python_path, pdbqt_to_pdb_path,
+                                                         output_pdbqt, output_pdb)
+                        os.system(command)
+                        os.remove(output_pdbqt)
+                        ligands.append(output_pdb)
+        else:
+            ligands = input_ligands
+
+        # 进行复合
+        self.progress["maximum"] = len(ligands)
+        for ligand in ligands:
+
+            # 更新进度条
+            label_text = str(ligands.index(ligand)+ 1) + "/" + str(len(ligands))
+            self.progress_label.label.configure(text=label_text)
+            self.progress_label.label.update()
+
+            self.progress["value"] = ligands.index(ligand) + 1
+            self.progress.update()
+
+            current_ligand = "当前配体：%s" % ligand.split("/")[-1].split(".")[0]
+            self.current_ligand.label.configure(text=current_ligand)
+            self.current_ligand.label.update()
+
+            output_name = ligand.split("/")[-1].split(".")[0] + "_" + input_receptor.split("/")[-1].split(".")[0] + ".pdb"
+            output = output_dir + "/" + output_name
+            command = "obabel %s %s -O %s -j" % (ligand, input_pdb, output)
+            os.system(command)
+
+        # 如果不保留提取配体，删除提取配体
+        if input_format == "pdbqt" and remain == "0":
+            for ligand in ligands:
+                os.remove(ligand)
+
+        # 删除受体
+        os.remove(input_pdb)
+
+        messagebox.showinfo("成功！", "生成复合物成功！")
+        self.progress_label.label.configure(text="没有任务")
+        self.progress_label.label.update()
+
+        self.progress["value"] = 0
+        self.progress.update()
+
+        self.current_ligand.label.configure(text="")
+        self.current_ligand.label.update()
 
     def save_para(self):
         self.config.para_dict["complex_ligand_format"] = self.input_format.textvariable.get()
