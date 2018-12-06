@@ -1203,7 +1203,6 @@ class Tab5(object):
         self.progress_label.label.update()
 
         if input_format == "pdbqt":
-            os.mkdir(output_dir)
             for ligand in input_ligands:
                 # 是否是单个配体:
                 with open(ligand, "r") as f:
