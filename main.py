@@ -18,6 +18,8 @@ class MainWindows(object):
         self.tab4 = None
         self.tab5 = None
         self.tab6 = None
+        self.tab7 = None
+        self.tab8 = None
 
         # 初始化配置存储对象
         self.config = configer.Configer()
@@ -44,11 +46,15 @@ class MainWindows(object):
         self.tab4 = Frame(self.notebook)
         self.tab5 = Frame(self.notebook)
         self.tab6 = Frame(self.notebook)
+        self.tab7 = Frame(self.notebook)
+        self.tab8 = Frame(self.notebook)
+        self.notebook.add(self.tab3, text="准备受体")
         self.notebook.add(self.tab1, text="准备对接配置")
         self.notebook.add(self.tab2, text="准备配体")
-        self.notebook.add(self.tab3, text="准备受体")
         self.notebook.add(self.tab4, text="分子对接")
+        self.notebook.add(self.tab8, text="工具")
         self.notebook.add(self.tab5, text="生成复合物")
+        self.notebook.add(self.tab7, text="分析作用力")
         self.notebook.add(self.tab6, text="关于")
 
         # 默认显示卡
@@ -78,6 +84,8 @@ if __name__ == '__main__':
     tab4 = s_tab.Tab4(sail_vina.tab4, sail_vina.config)
     tab5 = s_tab.Tab5(sail_vina.tab5, sail_vina.config)
     tab6 = s_tab.Tab6(sail_vina.tab6, sail_vina.config)
+    tab7 = s_tab.Tab7(sail_vina.tab7, sail_vina.config)
+    tab8 = s_tab.Tab8(sail_vina.tab8, sail_vina.config)
 
     # 退出按钮
     exit_button = Button(sail_vina.main_window, text="退出", command=sail_vina.save_para)

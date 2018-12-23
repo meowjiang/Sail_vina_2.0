@@ -1306,3 +1306,19 @@ class Tab6(object):
         self.config = config
         self.label1 = Label(tab, text="开发中……")
         self.label1.grid()
+
+
+class Tab7(object):
+
+    def __init__(self, tab, config):
+        self.config = config
+        self.label1 = Label(tab, text="作用力分析，开发中")
+        self.label1.grid()
+
+
+class Tab8(object):
+
+    def __init__(self, tab, config):
+        self.config = config
+        self.label1 = Label(tab, text="工具，开发中……")
+        self.label1.grid()

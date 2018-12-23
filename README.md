@@ -8,7 +8,9 @@ Autodock Vina对接GUI界面
 4. 生成配体-蛋白复合物  
 
 下一步计划：  
-1. 研究plip，生成相互作用力并生成图片
+1. 准备受体
+2. 作用力分子
+3. 提取分数，计算RMSD
 
 ---
 ### 软件的安装：  
@@ -29,7 +31,7 @@ Autodock Vina对接GUI界面
   -->下方"系统变量"找到变量名Path-->选中点击"编辑"-->点击"浏览"-->选择C:\OpenBabel-2.4.1-->点击确定即可
     3. 按下"win+r"，输入“cmd"。在命令行输入obabel
  出现如下结果则设置成功  
- ![obabel](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/cmd_obabel.jpg)
+ ![obabel](./readme_pic/cmd_obabel.jpg)
   
 - 安装ADT  
 [ADT下载](http://mgltools.scripps.edu/downloads/downloads/tars/releases/REL1.5.6/mgltools_win32_1.5.6_Setup.exe)
@@ -47,7 +49,7 @@ D:/test_sailvina/Docking_output
 
 1. 去pdbbank[下载1IEP](https://files.rcsb.org/download/1IEP.pdb)蛋白文件放置到D:/test_sailvina/Proteins/1IEP_imatinib
 文件夹下
-![pdb](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/pdb_bank.jpg)
+![pdb](./readme_pic/pdb_bank.jpg)
 2. 使用autodock tools导出共晶配体，准备受体文件。 
     - 打开ADT，导入刚下载的蛋白 
     - Edit - delete water
@@ -65,20 +67,20 @@ D:/test_sailvina/Docking_output
     - 打开SailVina
     - 在“准备对接配置”选项卡的“工具”中点击读取共晶配体。选择D:/test_sailvina/Proteins/1IEP_imatinib/co_cystal.pdbqt
     - 点击计算对接位点 - 确定，参数会变成如下（由于盒子总大小不能超过27000，所以如果过大需要根据实际需求修改盒子大小）  
-    ![co_ligand](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/load_co_ligand.jpg)
+    ![co_ligand](./readme_pic/load_co_ligand.jpg)
     - 点击选择输出目录，选择D:/test_sailvina/Proteins/1IEP_imatinib，点击输出 - 确定
 4. 准备配体
     - 使用化学作图软件（Chemdraw等）绘制出要对接的配体，保存成mol格式。（作为对接的验证，需要重新绘制原始共晶配体进行再对接re-docking，根据rmsd来判断对接的可靠程度。）本教程绘制2个，伊马替尼和尼洛替尼。保存到D:/test_sailvina/Ligands/mol文件夹中
     - 在SailVina“准备配体”选项卡中，按照下图配置参数。（脚本配置中的ADT的python路径请选择自己安装的路径）  
-    ![preped_ligand](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/preped_ligands.jpg)
+    ![preped_ligand](./readme_pic/preped_ligands.jpg)
     - 点击“开始转换”等待完成即可。
 5. 分子对接
     - 在“分子对接选项”卡中按照下图选择  
-    ![docking](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/docking.jpg)  
+    ![docking](./readme_pic/docking.jpg)  
     - 点击“开始对接”即可进行对接。（由于Vina对接会消耗大量CPU资源，如果出现未响应为正常现象，请等待对接完成）  
-    ![docking_process](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/docking_process.jpg)
+    ![docking_process](./readme_pic/docking_process.jpg)
 6. 结果分析
     - 目前处于开发阶段，对接结果保存在Docking_output文件夹中，可自行查看分析。  
-    ![docking_result](https://raw.githubusercontent.com/beikwx/Sail_vina_2.0/master/readme_pic/docking_result.jpg)  
+    ![docking_result](./readme_pic/docking_result.jpg)  
     图中绿色为对接配体，蓝色为原始共晶配体，可以看到对接结果还是比较可靠的。  
     查看作用力，rmsd计算将在后续版本提供。
