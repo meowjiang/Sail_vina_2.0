@@ -5,7 +5,6 @@ detection.py - Detect non-covalent interactions.
 
 # Python standard library
 from __future__ import absolute_import
-import itertools
 from collections import defaultdict
 
 # Own modules
@@ -230,10 +229,10 @@ def halogen(acceptor, donor):
         acc_angle, don_angle = vecangle(vec1, vec2), vecangle(vec3, vec4)
         is_sidechain_hal = acc.o.OBAtom.GetResidue().GetAtomProperty(acc.o.OBAtom, 8)  # Check if sidechain atom
         if not config.HALOGEN_ACC_ANGLE - config.HALOGEN_ANGLE_DEV < acc_angle \
-                < config.HALOGEN_ACC_ANGLE + config.HALOGEN_ANGLE_DEV:
+               < config.HALOGEN_ACC_ANGLE + config.HALOGEN_ANGLE_DEV:
             continue
         if not config.HALOGEN_DON_ANGLE - config.HALOGEN_ANGLE_DEV < don_angle \
-                < config.HALOGEN_DON_ANGLE + config.HALOGEN_ANGLE_DEV:
+               < config.HALOGEN_DON_ANGLE + config.HALOGEN_ANGLE_DEV:
             continue
         restype, reschain, resnr = whichrestype(acc.o), whichchain(acc.o), whichresnumber(acc.o)
         restype_l, reschain_l, resnr_l = whichrestype(don.orig_x), whichchain(don.orig_x), whichresnumber(don.orig_x)

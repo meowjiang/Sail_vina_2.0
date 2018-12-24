@@ -7,18 +7,14 @@ visualize.py - Visualization of PLIP results using PyMOL.
 from __future__ import absolute_import
 
 # Own modules
-from .supplemental import initialize_pymol, start_pymol, write_message, colorlog, sysexit
+from .supplemental import start_pymol, write_message
 from . import config
 from .pymolplip import PyMOLVisualizer
-from .plipremote import VisualizerData
 
 # Python Standard Library
-import json
-import sys
 
 # Special imports
 from pymol import cmd
-import pymol
 
 
 def select_by_ids(selname, idlist, selection_exists=False, chunksize=20, restrict=None):

@@ -17,7 +17,6 @@ import os
 if os.name != 'nt':  # Resource module not available for Windows
     import resource
 import subprocess
-import codecs
 import gzip
 import zipfile
 import platform
@@ -25,7 +24,6 @@ import platform
 # External libraries
 import pybel
 from pybel import *
-from openbabel import *
 import numpy as np
 import itertools
 
@@ -477,7 +475,7 @@ def colorlog(msg, color, bold=False, blink=False):
 
 def write_message(msg, indent=False, mtype='standard', caption=False):
     """Writes message if verbose mode is set."""
-    if (mtype=='debug' and config.DEBUG) or (mtype !='debug' and config.VERBOSE) or mtype=='error':
+    if (mtype =='debug' and config.DEBUG) or (mtype != 'debug' and config.VERBOSE) or mtype== 'error':
         message(msg, indent=indent, mtype=mtype, caption=caption)
 
 def message(msg, indent=False, mtype='standard', caption=False):

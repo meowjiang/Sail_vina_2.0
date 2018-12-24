@@ -380,7 +380,7 @@ class LigandFinder:
         candidates1 = [o for o in pybel.ob.OBResidueIter(self.proteincomplex.OBMol) if not o.GetResidueProperty(9) and self.is_het_residue(o)]
 
         if config.DNARECEPTOR: # If DNA is the receptor, don't consider DNA as a ligand
-            candidates1 = [res for res in candidates1 if res.GetName() not in config.DNA+config.RNA]
+            candidates1 = [res for res in candidates1 if res.GetName() not in config.DNA + config.RNA]
         all_lignames = set([a.GetName() for a in candidates1])
 
         water = [o for o in pybel.ob.OBResidueIter(self.proteincomplex.OBMol) if o.GetResidueProperty(9)]
@@ -1348,7 +1348,7 @@ class PDBComplex:
             write_message("Excluded molecules as ligands: %s\n" % ','.join([lig for lig in self.excluded]))
 
         if config.DNARECEPTOR:
-            self.resis = [obres for obres in pybel.ob.OBResidueIter(self.protcomplex.OBMol) if obres.GetName() in config.DNA+config.RNA]
+            self.resis = [obres for obres in pybel.ob.OBResidueIter(self.protcomplex.OBMol) if obres.GetName() in config.DNA + config.RNA]
         else:
             self.resis = [obres for obres in pybel.ob.OBResidueIter(self.protcomplex.OBMol) if obres.GetResidueProperty(0)]
 
@@ -1417,7 +1417,7 @@ class PDBComplex:
                     bs_atoms_refined.append(r)
         num_bs_atoms = len(bs_atoms_refined)
         write_message('Binding site atoms in vicinity (%.1f A max. dist: %i).\n' % (config.BS_DIST, num_bs_atoms),
-                indent=True)
+                      indent=True)
 
         bs_obj = BindingSite(bs_atoms_refined, self.protcomplex, self, self.altconf, min_dist, self.Mapper)
         pli_obj = PLInteraction(lig_obj, bs_obj, self)

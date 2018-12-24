@@ -1,15 +1,7 @@
 from tkinter import *
 from tkinter.ttk import *
-import s_label
-import s_entry
-import configer
-import s_button
-import tooltip
+from SailVina import configer, genbox, help_text, s_combobox, s_checkbox, s_button, s_label, s_entry, tooltip
 from tkinter import messagebox
-import genbox
-import s_combobox
-import help_text
-import s_checkbox
 import os
 import shutil
 import time

@@ -1,9 +1,7 @@
 from tkinter import *
 from tkinter.ttk import *
-import s_tab
-import configer
+from SailVina import configer, s_tab, tooltip
 from tkinter import messagebox
-import tooltip
 
 
 class MainWindows(object):
