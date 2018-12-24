@@ -14,8 +14,9 @@ Autodock Vina对接GUI界面
 
 ---
 ### 软件的安装：  
-解压main.zip到需要安装的目录，直接运行内部的main.exe文件即可。  
+1. 解压main.zip到需要安装的目录，直接运行内部的main.exe文件即可。  
 注意：本软件的解压路径不要包含空格和中文！
+2. 克隆本项目到本地，在SailVina中用python运行main.py
   
 系统需求：  
 - 安装obabel并将obabel.exe放在环境变量中

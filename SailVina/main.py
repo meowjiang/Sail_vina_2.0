@@ -19,6 +19,8 @@ class MainWindows(object):
         self.tab7 = None
         self.tab8 = None
 
+        self.top = None
+
         # 初始化配置存储对象
         self.config = configer.Configer()
 
@@ -69,6 +71,22 @@ class MainWindows(object):
             self.config.save_para()
             self.main_window.destroy()
 
+    def set_config(self):
+        self.top = Toplevel(self.main_window)
+        # 居中显示
+        screen_width = self.main_window.winfo_screenwidth()
+        screen_height = self.main_window.winfo_screenheight()
+        x = (screen_width / 2) - (400 / 2)
+        y = (screen_height / 2) - (100 / 2)
+        self.top.geometry('%dx%d+%d+%d' % (400, 100, x, y))
+        self.top.resizable(width=False, height=False)
+        self.top.title("设置参数")
+        self.top.attributes('-topmost', 1)
+        self.top.focus()
+        self.top.grab_set()
+        label = Label(self.top, text="选择路径")
+        label.place(x=10, y=10)
+
 
 if __name__ == '__main__':
     # 创建主窗口对象
@@ -84,6 +102,11 @@ if __name__ == '__main__':
     tab6 = s_tab.Tab6(sail_vina.tab6, sail_vina.config)
     tab7 = s_tab.Tab7(sail_vina.tab7, sail_vina.config)
     tab8 = s_tab.Tab8(sail_vina.tab8, sail_vina.config)
+
+    # 脚本配置
+    config_button = Button(sail_vina.main_window, text="脚本配置", command=sail_vina.set_config)
+    config_button.place(x=510, y=5, width=80)
+    tooltip.create_tooltip(config_button, "设置脚本所需路径")
 
     # 退出按钮
     exit_button = Button(sail_vina.main_window, text="退出", command=sail_vina.save_para)

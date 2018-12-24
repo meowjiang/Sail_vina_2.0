@@ -43,7 +43,7 @@ class Configer(object):
                                 "complex_ligand_format=\n" \
                                 "complex_ligand_num=1\n" \
                                 "choose_complex_ligands=\n" \
-                                "remain_ligand=\n" \
+                                "remain_ligand=0\n" \
                                 "choose_complex_proteins=\n" \
                                 "choose_complex_output=\n"
                 f.write(initial_value)
