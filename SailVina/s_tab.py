@@ -397,7 +397,7 @@ class Tab2(object):  # 准备配体
                                                        x=150, y=y + 4, width=410)
         tooltip.create_tooltip(self.choose_python_path_entry.entry, "ADT的python路径")
         self.choose_python_path.bind_open_file(entry_text=self.choose_python_path_entry.textvariable,
-                                               title="选择要输出配体的文件夹",
+                                               title="选择ADT中的python.exe",
                                                file_type="exe")
 
     def _disable_minimize(self, event):
@@ -1003,7 +1003,7 @@ class Tab3(object):
         self.label1.grid()
 
 
-class Tab5(object):
+class Tab5(object):  # 复合
 
     def __init__(self, tab, config):
         self.root = tab

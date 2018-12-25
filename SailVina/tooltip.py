@@ -17,6 +17,7 @@ class ToolTip(object):
         y = y + cy + self.widget.winfo_rooty() + 25
         self.tip_windows = tw = tk.Toplevel(self.widget)  # 创建新的提示窗口
         tw.wm_overrideredirect(True)  # 去掉所有的窗口管理(Windows Manager, wm)修饰器
+        tw.attributes('-topmost', True)
         tw.wm_geometry("+%d+%d" % (x, y))  # 创建窗口的大小
 
         label = ttk.Label(tw, text=tip_text, justify=tk.LEFT,

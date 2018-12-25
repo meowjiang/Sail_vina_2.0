@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter.ttk import *
 from SailVina import configer, s_tab, tooltip
 from tkinter import messagebox
+from SailVina import s_button
+from SailVina import s_entry
 
 
 class MainWindows(object):
@@ -81,11 +83,25 @@ class MainWindows(object):
         self.top.geometry('%dx%d+%d+%d' % (400, 100, x, y))
         self.top.resizable(width=False, height=False)
         self.top.title("设置参数")
-        self.top.attributes('-topmost', 1)
+        self.top.attributes('-topmost', True)
         self.top.focus()
         self.top.grab_set()
-        label = Label(self.top, text="选择路径")
-        label.place(x=10, y=10)
+
+        # 进行布局
+        y = 10
+        choose_python_path = s_button.SButton(self.top,
+                                              text="选择ADT的python路径",
+                                              x=10, y=y)
+        tooltip.create_tooltip(choose_python_path.button, "必须选择mgltools目录里面的python.exe文件！\n"
+                                                          "比如：\nC:/mgltools/python.exe")
+        choose_python_path_entry = s_entry.SEntry(root=self.top,
+                                                  textvariable=StringVar(),
+                                                  text=configer.Configer.get_para("python_path"),
+                                                  x=150, y=y + 4, width=200)
+        tooltip.create_tooltip(choose_python_path_entry.entry, "ADT的python路径")
+        choose_python_path.bind_open_file(entry_text=choose_python_path_entry.textvariable,
+                                          title="选择ADT中的python.exe",
+                                          file_type="exe")
 
 
 if __name__ == '__main__':
