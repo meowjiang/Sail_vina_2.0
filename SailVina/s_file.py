@@ -6,12 +6,19 @@ from tkinter.filedialog import askopenfilenames
 class SFile(object):
 
     @staticmethod
-    def open_file(initial_dir, title, file_type):
-        filename = askopenfilename(initialdir=initial_dir, title=title,
-                                   filetypes=(("%s文件" % file_type, "*.%s" % file_type), ("所有文件", "*.*")))
-        if filename == "":
-            return initial_dir
-        return filename
+    def open_file(initial_dir, title, file_type, parent=""):
+        if parent == "":
+            filename = askopenfilename(initialdir=initial_dir, title=title,
+                                       filetypes=(("%s文件" % file_type, "*.%s" % file_type), ("所有文件", "*.*")))
+            if filename == "":
+                return initial_dir
+            return filename
+        else:
+            filename = askopenfilename(parent=parent, initialdir=initial_dir, title=title,
+                                       filetypes=(("%s文件" % file_type, "*.%s" % file_type), ("所有文件", "*.*")))
+            if filename == "":
+                return initial_dir
+            return filename
 
     @staticmethod
     def open_files(initial_dir, title, file_type):

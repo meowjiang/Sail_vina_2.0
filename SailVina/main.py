@@ -83,7 +83,7 @@ class MainWindows(object):
         self.top.geometry('%dx%d+%d+%d' % (400, 100, x, y))
         self.top.resizable(width=False, height=False)
         self.top.title("设置参数")
-        self.top.attributes('-topmost', True)
+        self.top.lift()
         self.top.focus()
         self.top.grab_set()
 
@@ -101,7 +101,7 @@ class MainWindows(object):
         tooltip.create_tooltip(choose_python_path_entry.entry, "ADT的python路径")
         choose_python_path.bind_open_file(entry_text=choose_python_path_entry.textvariable,
                                           title="选择ADT中的python.exe",
-                                          file_type="exe")
+                                          file_type="exe", parent=self.top)
 
 
 if __name__ == '__main__':

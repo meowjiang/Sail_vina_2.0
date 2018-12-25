@@ -18,16 +18,18 @@ class SButton(object):
         self.initial_dir = None
         self.title = None
         self.file_type = None
+        self.parent = None
 
     def _bind_open_file(self, event):
         self.initial_dir = self.entry_text.get()
-        filename = s_file.SFile().open_file(self.initial_dir, self.title, self.file_type)
+        filename = s_file.SFile().open_file(self.initial_dir, self.title, self.file_type, parent=self.parent)
         self.entry_text.set(filename)
 
-    def bind_open_file(self, entry_text, title, file_type):
+    def bind_open_file(self, entry_text, title, file_type, parent=""):
         self.entry_text = entry_text
         self.title = title
         self.file_type = file_type
+        self.parent = parent
         self.button.bind("<Button-1>", self._bind_open_file)
 
     def _bind_open_dir(self, event):
