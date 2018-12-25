@@ -1,9 +1,7 @@
 from tkinter import *
 from tkinter.ttk import *
-from SailVina import configer, s_tab, tooltip
+from SailVina import configer, s_tab, tooltip, set_config
 from tkinter import messagebox
-from SailVina import s_button
-from SailVina import s_entry
 
 
 class MainWindows(object):
@@ -66,6 +64,8 @@ class MainWindows(object):
 
     def save_para(self):
         if messagebox.askokcancel("退出", "保存参数并退出软件？"):
+            self.config.para_dict["python_path"] = self.config.get_para("python_path")
+            self.config.para_dict["obabel_path"] = self.config.get_para("obabel_path")
             tab1.save_para()
             tab2.save_para()
             tab4.save_para()
@@ -74,34 +74,7 @@ class MainWindows(object):
             self.main_window.destroy()
 
     def set_config(self):
-        self.top = Toplevel(self.main_window)
-        # 居中显示
-        screen_width = self.main_window.winfo_screenwidth()
-        screen_height = self.main_window.winfo_screenheight()
-        x = (screen_width / 2) - (400 / 2)
-        y = (screen_height / 2) - (100 / 2)
-        self.top.geometry('%dx%d+%d+%d' % (400, 100, x, y))
-        self.top.resizable(width=False, height=False)
-        self.top.title("设置参数")
-        self.top.lift()
-        self.top.focus()
-        self.top.grab_set()
-
-        # 进行布局
-        y = 10
-        choose_python_path = s_button.SButton(self.top,
-                                              text="选择ADT的python路径",
-                                              x=10, y=y)
-        tooltip.create_tooltip(choose_python_path.button, "必须选择mgltools目录里面的python.exe文件！\n"
-                                                          "比如：\nC:/mgltools/python.exe")
-        choose_python_path_entry = s_entry.SEntry(root=self.top,
-                                                  textvariable=StringVar(),
-                                                  text=configer.Configer.get_para("python_path"),
-                                                  x=150, y=y + 4, width=200)
-        tooltip.create_tooltip(choose_python_path_entry.entry, "ADT的python路径")
-        choose_python_path.bind_open_file(entry_text=choose_python_path_entry.textvariable,
-                                          title="选择ADT中的python.exe",
-                                          file_type="exe", parent=self.top)
+        set_config.SetConfig(self.main_window, sail_vina.config)
 
 
 if __name__ == '__main__':

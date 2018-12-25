@@ -1,5 +1,6 @@
 import os
 import sys
+from SailVina import check
 from tkinter import messagebox
 
 
@@ -10,9 +11,6 @@ class Configer(object):
 
     @staticmethod
     def first_open():
-        obabel_cmd = os.popen("obabel").read()
-        if "Usage" not in obabel_cmd:
-            messagebox.showwarning("警告！", "检测到obabel没有在环境变量中，无法进行格式转换！")
         if not os.path.exists(os.path.realpath(sys.argv[0]) + "/../para.txt"):
             with open(os.path.realpath(sys.argv[0]) + "/../para.txt", "w") as f:
                 initial_value = "center_x=0.0\n" \
@@ -36,6 +34,7 @@ class Configer(object):
                                 "minimize=\n" \
                                 "ligand_output_dir=\n" \
                                 "python_path=\n" \
+                                "obabel_path=\n" \
                                 "choose_docking_ligands=\n" \
                                 "choose_docking_proteins=\n" \
                                 "choose_docking_output=\n" \

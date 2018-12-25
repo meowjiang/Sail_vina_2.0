@@ -5,6 +5,7 @@ from tkinter import messagebox
 import os
 import shutil
 import time
+from SailVina import check
 
 
 class Tab1(object):  # 配置config.txt
@@ -275,7 +276,6 @@ class Tab2(object):  # 准备配体
 
         self._create_choose_ligand_frame()
         self._create_output_ligand_frame()
-        self._create_python_frame()
 
         # 开始转换
         self._create_convert()
@@ -381,25 +381,6 @@ class Tab2(object):  # 准备配体
         self.choose_output_dir_button.bind_open_dir(entry_text=self.choose_output_dir_entry.textvariable,
                                                     title="选择要输出配体的文件夹")
 
-    def _create_python_frame(self):
-        self.choose_python_labelframe = LabelFrame(self.root, text="脚本配置")
-        self.choose_python_labelframe.place(x=10, y=220, width=570, height=50)
-
-        y = 0
-        self.choose_python_path = s_button.SButton(self.choose_python_labelframe,
-                                                   text="选择ADT的python路径",
-                                                   x=10, y=y)
-        tooltip.create_tooltip(self.choose_python_path.button, "必须选择mgltools目录里面的python.exe文件！\n"
-                                                               "比如：\nC:/mgltools/python.exe")
-        self.choose_python_path_entry = s_entry.SEntry(root=self.choose_python_labelframe,
-                                                       textvariable=StringVar(),
-                                                       text=configer.Configer.get_para("python_path"),
-                                                       x=150, y=y + 4, width=410)
-        tooltip.create_tooltip(self.choose_python_path_entry.entry, "ADT的python路径")
-        self.choose_python_path.bind_open_file(entry_text=self.choose_python_path_entry.textvariable,
-                                               title="选择ADT中的python.exe",
-                                               file_type="exe")
-
     def _disable_minimize(self, event):
         state = self.is_minimize.variable.get()
         if state == "1":
@@ -424,10 +405,9 @@ class Tab2(object):  # 准备配体
         self.config.para_dict["is_minimize"] = self.is_minimize.variable.get()
         self.config.para_dict["minimize"] = self.minimize.textvariable.get()
         self.config.para_dict["ligand_output_dir"] = self.choose_output_dir_entry.textvariable.get()
-        self.config.para_dict["python_path"] = self.choose_python_path_entry.textvariable.get()
 
     def _create_convert(self):
-        y = 272
+        y = 230
         self.convert_button = s_button.SButton(root=self.root, x=10, y=y, text="开始转换")
         tooltip.create_tooltip(self.convert_button.button, "开始转换")
         self.progress = Progressbar(self.root, mode="determinate")
@@ -437,9 +417,8 @@ class Tab2(object):  # 准备配体
         self.convert_button.button.bind("<Button-1>", self._start_convert)
 
     def _start_convert(self, event):
-        obabel_cmd = os.popen("obabel").read()
-        if "Usage" not in obabel_cmd:
-            messagebox.showerror("错误！", "obabel不在环境变量中，请设置环境变量并重启本软件才能进行格式转换！")
+        obabel_path = configer.Configer.get_para("obabel_path")
+        if not check.Check.check_obabel(obabel_path):
             return
 
         input_files = self.choose_ligands_entry.textvariable.get()
@@ -490,24 +469,14 @@ class Tab2(object):  # 准备配体
             messagebox.showerror("输入错误！", "输出路径不存在！")
             return
 
-        python_path = self.choose_python_path_entry.textvariable.get()
-
-        # python目录不能包含空格
-        if python_path == "" or python_path.count(" ") > 0 or not python_path.endswith("python.exe"):
-            messagebox.showerror("输入错误！", "adt的python.exe选择不正确，请确保路径不包含空格"
-                                          "并且是python.exe文件！")
+        python_path = configer.Configer.get_para("python_path")
+        # 检查python路径是否正确
+        if not check.Check.check_python(python_path):
             return
 
         output_ligands = []
         pdbqt_to_pdb_path = os.path.realpath(__file__) + "/../res/pdbqt_to_pdb.py"
         pdb_to_pdbqt_path = os.path.realpath(__file__) + "/../res/prepare_ligand4.py"
-
-        # 检查pthon路径是否正确
-        check_cmd = "%s %s" % (python_path, pdbqt_to_pdb_path)
-        state = os.system(check_cmd)
-        if state == 1:
-            messagebox.showerror("python路径错误！", "请确定选择的是安装adt软件的python.exe！")
-            return
 
         for ligand in input_ligands:
             ligand_name = ligand.split("/")[-1].split(".")[0] + "." + output_format
@@ -573,7 +542,7 @@ class Tab2(object):  # 准备配体
 
                 i = 0
                 while i < len(input_ligands):
-                    command = "obabel %s -O %s" % (pdb_ligands[i], output_ligands[i])
+                    command = "%s %s -O %s" % (obabel_path, pdb_ligands[i], output_ligands[i])
 
                     # 更改标签文字
                     label_text = "%i/%i" % (i + 1, len(input_ligands))
@@ -629,9 +598,9 @@ class Tab2(object):  # 准备配体
 
                 i = 0
                 while i < len(input_ligands):
-                    command = "obabel %s -O %s -p %s --gen3d --minimize --ff %s" % (input_ligands[i],
-                                                                                    pdb_ligands[i],
-                                                                                    ph, minimize)
+                    command = "%s %s -O %s -p %s --gen3d --minimize --ff %s" % (obabel_path, input_ligands[i],
+                                                                                pdb_ligands[i],
+                                                                                ph, minimize)
 
                     label_text = "%i/%i" % (i + 1, len(input_ligands))
                     self.progress_label.label.configure(text=label_text)
@@ -669,9 +638,9 @@ class Tab2(object):  # 准备配体
                     if is_minimize == "1":
                         i = 0
                         while i < len(input_ligands):
-                            command = "obabel %s -O %s -p %s --gen3d --minimize --ff %s" % (input_ligands[i],
-                                                                                            output_ligands[i],
-                                                                                            ph, minimize)
+                            command = "%s %s -O %s -p %s --gen3d --minimize --ff %s" % (obabel_path, input_ligands[i],
+                                                                                        output_ligands[i],
+                                                                                        ph, minimize)
 
                             label_text = "%s/%s" % (i + 1, len(input_ligands))
                             self.progress_label.label.configure(text=label_text)
@@ -688,9 +657,9 @@ class Tab2(object):  # 准备配体
                     else:
                         i = 0
                         while i < len(input_ligands):
-                            command = "obabel %s -O %s -p %s --gen3d" % (input_ligands[i],
-                                                                         output_ligands[i],
-                                                                         ph)
+                            command = "%s %s -O %s -p %s --gen3d" % (obabel_path, input_ligands[i],
+                                                                     output_ligands[i],
+                                                                     ph)
 
                             label_text = "%s/%s" % (i + 1, len(input_ligands))
                             self.progress_label.label.configure(text=label_text)
@@ -708,9 +677,9 @@ class Tab2(object):  # 准备配体
                     if is_minimize == "1":
                         i = 0
                         while i < len(input_ligands):
-                            command = "obabel %s -O %s -p %s --minimize --ff %s" % (input_ligands[i],
-                                                                                    output_ligands[i],
-                                                                                    ph, minimize)
+                            command = "%s %s -O %s -p %s --minimize --ff %s" % (obabel_path, input_ligands[i],
+                                                                                output_ligands[i],
+                                                                                ph, minimize)
 
                             label_text = "%s/%s" % (i + 1, len(input_ligands))
                             self.progress_label.label.configure(text=label_text)
@@ -727,9 +696,9 @@ class Tab2(object):  # 准备配体
                     else:
                         i = 0
                         while i < len(input_ligands):
-                            command = "obabel %s -O %s -p %s" % (input_ligands[i],
-                                                                 output_ligands[i],
-                                                                 ph)
+                            command = "%s %s -O %s -p %s" % (obabel_path, input_ligands[i],
+                                                             output_ligands[i],
+                                                             ph)
 
                             label_text = "%s/%s" % (i + 1, len(input_ligands))
                             self.progress_label.label.configure(text=label_text)
@@ -1173,11 +1142,11 @@ class Tab5(object):  # 复合
         python_path = configer.Configer.get_para("python_path")
         pdbqt_to_pdb_path = os.path.realpath(__file__) + "/../res/pdbqt_to_pdb.py"
 
-        # 检查python路径是否正确
-        check_cmd = "%s %s" % (python_path, pdbqt_to_pdb_path)
-        state = os.system(check_cmd)
-        if state == 1:
-            messagebox.showerror("python路径错误！", "请确定选择的是安装adt软件的python.exe！")
+        # 检查路径是否正确
+        if not check.Check.check_python(python_path):
+            return
+        obabel_path = configer.Configer.get_para("obabel_path")
+        if not check.Check.check_obabel(obabel_path):
             return
 
         self.progress_label.label.configure(text="准备受体")
@@ -1247,9 +1216,8 @@ class Tab5(object):  # 复合
         # 进行复合
         self.progress["maximum"] = len(ligands)
         for ligand in ligands:
-
             # 更新进度条
-            label_text = str(ligands.index(ligand)+ 1) + "/" + str(len(ligands))
+            label_text = str(ligands.index(ligand) + 1) + "/" + str(len(ligands))
             self.progress_label.label.configure(text=label_text)
             self.progress_label.label.update()
 
@@ -1260,9 +1228,10 @@ class Tab5(object):  # 复合
             self.current_ligand.label.configure(text=current_ligand)
             self.current_ligand.label.update()
 
-            output_name = ligand.split("/")[-1].split(".")[0] + "_" + input_receptor.split("/")[-1].split(".")[0] + ".pdb"
+            output_name = ligand.split("/")[-1].split(".")[0] + "_" + input_receptor.split("/")[-1].split(".")[
+                0] + ".pdb"
             output = output_dir + "/" + output_name
-            command = "obabel %s %s -O %s -j" % (ligand, input_pdb, output)
+            command = "%s %s %s -O %s -j" % (obabel_path, ligand, input_pdb, output)
             os.system(command)
 
         # 如果不保留提取配体，删除提取配体
