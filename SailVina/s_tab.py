@@ -1,11 +1,11 @@
 from tkinter import *
 from tkinter.ttk import *
-from SailVina import configer, genbox, help_text, s_combobox, s_checkbox, s_button, s_label, s_entry, tooltip
+import configer, genbox, help_text, s_combobox, s_checkbox, s_button, s_label, s_entry, tooltip
 from tkinter import messagebox
 import os
 import shutil
 import time
-from SailVina import check
+import check
 
 
 class Tab1(object):  # 配置config.txt

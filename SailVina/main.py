@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter.ttk import *
-from SailVina import configer, s_tab, tooltip, set_config
+import configer, s_tab, tooltip, set_config
 from tkinter import messagebox
 
 

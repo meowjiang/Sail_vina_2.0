@@ -1,8 +1,8 @@
 from tkinter import *
 from tkinter.ttk import *
-from SailVina import s_button
-from SailVina import s_entry
-from SailVina import tooltip, configer, check
+import s_button
+import s_entry
+import tooltip, configer, check
 from tkinter import messagebox
 import os
 

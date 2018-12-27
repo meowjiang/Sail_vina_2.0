@@ -1,6 +1,6 @@
 import os
 import sys
-from SailVina import check
+import check
 from tkinter import messagebox
 
 

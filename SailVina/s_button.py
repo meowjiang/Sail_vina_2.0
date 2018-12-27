@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter.ttk import *
-from SailVina import s_file
+import s_file
 from tkinter import messagebox
 
 
