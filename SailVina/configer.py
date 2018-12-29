@@ -44,7 +44,12 @@ class Configer(object):
                                 "choose_complex_ligands=\n" \
                                 "remain_ligand=0\n" \
                                 "choose_complex_proteins=\n" \
-                                "choose_complex_output=\n"
+                                "choose_complex_output=\n" \
+                                "pdbid=\n" \
+                                "pdb_path=\n" \
+                                "extract_ligand_path=\n" \
+                                "raw_receptor_path=\n" \
+                                "preped_path=\n"
                 f.write(initial_value)
 
     @staticmethod

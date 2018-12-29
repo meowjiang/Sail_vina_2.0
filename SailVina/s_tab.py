@@ -964,12 +964,114 @@ class Tab4(object):  # 分子对接
         self.config.para_dict["docking_times"] = self.times_entry.textvariable.get()
 
 
-class Tab3(object):
+class Tab3(object):  # 准备受体
 
     def __init__(self, tab, config):
+        self.root = tab
         self.config = config
-        self.label1 = Label(tab, text="开发中……")
-        self.label1.grid()
+
+        self.create_download_receptor()
+        self.create_extract_ligand()
+        self.create_prepared_receptor()
+
+        # 帮助按钮
+        self.help_button = s_button.HelpButton(root=self.root, help_text=help_text.TAB3_TEXT, x=410, y=300, width=80)
+        tooltip.create_tooltip(self.help_button.help_button, "获取帮助")
+
+    def create_download_receptor(self):
+        download_receptor_labelframe = LabelFrame(self.root, text="下载受体")
+        download_receptor_labelframe.place(x=10, y=10, width=570, height=115)
+
+        s_label.SLabel(download_receptor_labelframe, "PDBID：", x=10, y=0)
+        self.pdbid_entry = s_entry.SEntry(download_receptor_labelframe, textvariable=StringVar(),
+                                          text=configer.Configer.get_para("pdbid"),
+                                          x=70, y=0, width=50)
+        tooltip.create_tooltip(self.pdbid_entry.entry, "请输入四位PDB的ID")
+
+        pdb_save_path_button = s_button.SButton(download_receptor_labelframe,
+                                                text="选择保存的路径", x=10, y=30)
+        tooltip.create_tooltip(pdb_save_path_button.button, "选择下载受体要保存的位置")
+        self.pdb_save_path_entry = s_entry.SEntry(download_receptor_labelframe,
+                                                  textvariable=StringVar(),
+                                                  text=configer.Configer.get_para("pdb_path"),
+                                                  x=110, y=35, width=440)
+        tooltip.create_tooltip(self.pdb_save_path_entry.entry, "文件将要保存的目录，不存在将创建文件夹")
+        pdb_save_path_button.bind_open_dir(entry_text=self.pdb_save_path_entry.textvariable, title="选择要保存的路径")
+
+        download_pdb_button = s_button.SButton(download_receptor_labelframe,
+                                               text="开始下载", x=10, y=60)
+        download_pdb_button.button.bind("<Button-1>", self.downloadpdb)
+        self.download_progressbar = Progressbar(download_receptor_labelframe, mode="determinate")
+        self.download_progressbar.place(x=100, y=62, width=380)
+
+        self.download_state_label = s_label.SLabel(download_receptor_labelframe,
+                                                   text="没有下载", x=490, y=60)
+
+    def create_extract_ligand(self):
+        extract_ligand_labelframe = LabelFrame(self.root, text="提取配体")
+        extract_ligand_labelframe.place(x=10, y=130, width=570, height=55)
+
+        ligand_save_path_button = s_button.SButton(extract_ligand_labelframe,
+                                                   text="选择保存的路径", x=10, y=0)
+        tooltip.create_tooltip(ligand_save_path_button.button, "选择提取的配体要保存的位置")
+        self.ligand_save_path_entry = s_entry.SEntry(extract_ligand_labelframe,
+                                                     textvariable=StringVar(),
+                                                     text=configer.Configer.get_para("extract_ligand_path"),
+                                                     x=110, y=3, width=350)
+        tooltip.create_tooltip(self.ligand_save_path_entry.entry, "提取的配体保存的目录，不存在将创建文件夹")
+        ligand_save_path_button.bind_open_dir(entry_text=self.ligand_save_path_entry.textvariable, title="选择要保存的路径")
+
+        save_ligand_button = s_button.SButton(extract_ligand_labelframe, text="提取配体",
+                                              x=470, y=0)
+        save_ligand_button.button.bind("<Button-1>", self.extract_ligand)
+        tooltip.create_tooltip(save_ligand_button.button, "提取受体中的配体")
+
+    def create_prepared_receptor(self):
+        prepared_receptor_labelframe = LabelFrame(self.root, text="准备受体")
+        prepared_receptor_labelframe.place(x=10, y=190, width=570, height=85)
+
+        choose_raw_receptor_button = s_button.SButton(prepared_receptor_labelframe,
+                                                      text="选择受体", x=10, y=0)
+        tooltip.create_tooltip(choose_raw_receptor_button.button, "选择要进行准备的pdb受体")
+        self.choose_raw_receptor_entry = s_entry.SEntry(prepared_receptor_labelframe,
+                                                        textvariable=StringVar(),
+                                                        text=configer.Configer.get_para("raw_receptor_path"),
+                                                        x=100, y=3, width=450)
+        tooltip.create_tooltip(self.choose_raw_receptor_entry.entry, "选择的受体")
+        choose_raw_receptor_button.bind_open_file(entry_text=self.choose_raw_receptor_entry.textvariable,
+                                                  title="选择受体pdb文件", file_type="pdb")
+
+        save_prepared_receptor_button = s_button.SButton(prepared_receptor_labelframe,
+                                                         text="输出路径", x=10, y=30)
+        tooltip.create_tooltip(save_prepared_receptor_button.button, "选择准备后的受体保存路径")
+        self.choose_prepare_output_path = s_entry.SEntry(prepared_receptor_labelframe,
+                                                         textvariable=StringVar(),
+                                                         text=configer.Configer.get_para("preped_path"),
+                                                         x=100, y=33, width=360)
+        tooltip.create_tooltip(self.choose_prepare_output_path.entry, "准备受体后的输出目录")
+        save_prepared_receptor_button.bind_open_dir(self.choose_prepare_output_path.textvariable,
+                                                    title="选择输出目录")
+
+        prepare_receptor_button = s_button.SButton(prepared_receptor_labelframe, text="准备受体",
+                                                   x=470, y=30)
+        prepare_receptor_button.button.bind("<Button-1>", self.prepared_receptor)
+        tooltip.create_tooltip(prepare_receptor_button.button, "开始准备受体")
+
+    def downloadpdb(self, event):
+        messagebox.showinfo("成功", "下载完毕！")
+
+    def extract_ligand(self, event):
+        messagebox.showinfo("成功", "提取配体成功")
+
+    def prepared_receptor(self, event):
+        messagebox.showinfo("成功", "成功准备受体")
+
+    def save_para(self):
+        self.config.para_dict["pdbid"] = self.pdbid_entry.textvariable.get()
+        self.config.para_dict["pdb_path"] = self.pdb_save_path_entry.textvariable.get()
+        self.config.para_dict["extract_ligand_path"] = self.ligand_save_path_entry.textvariable.get()
+        self.config.para_dict["raw_receptor_path"] = self.choose_raw_receptor_entry.textvariable.get()
+        self.config.para_dict["preped_path"] = self.choose_prepare_output_path.textvariable.get()
 
 
 class Tab5(object):  # 复合

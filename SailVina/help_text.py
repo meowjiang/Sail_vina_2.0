@@ -40,3 +40,9 @@ TAB4_TEXT = "本界面用于调用vina进行分子对接\n\n" \
             "C:/receptors即可。"
 
 TAB5_TEXT = "tab5帮助"
+
+TAB6_TEXT = "tab5帮助"
+
+TAB7_TEXT = "tab5帮助"
+
+TAB8_TEXT = "tab5帮助"

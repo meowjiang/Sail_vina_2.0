@@ -68,6 +68,7 @@ class MainWindows(object):
             self.config.para_dict["obabel_path"] = self.config.get_para("obabel_path")
             tab1.save_para()
             tab2.save_para()
+            tab3.save_para()
             tab4.save_para()
             tab5.save_para()
             self.config.save_para()
