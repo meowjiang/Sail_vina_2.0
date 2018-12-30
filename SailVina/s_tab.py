@@ -6,6 +6,9 @@ import os
 import shutil
 import time
 import check
+from res.plip.modules import webservices
+import requests
+from contextlib import closing
 
 
 class Tab1(object):  # 配置config.txt
@@ -1058,7 +1061,70 @@ class Tab3(object):  # 准备受体
         tooltip.create_tooltip(prepare_receptor_button.button, "开始准备受体")
 
     def downloadpdb(self, event):
-        messagebox.showinfo("成功", "下载完毕！")
+        pdbid = self.pdbid_entry.textvariable.get()
+        filepath = self.pdb_save_path_entry.textvariable.get()
+        if len(pdbid) != 4:
+            messagebox.showerror("错误！", "请输入四位pdb代码！")
+            return
+        state, current_entry = webservices.check_pdb_status(pdbid)
+        if state == "CURRENT":
+            self._downloadpdb(current_entry, filepath)
+        elif state == "OBSOLETE":
+            messagebox.showwarning("当前pdb已经过时！", "将下载%s" % current_entry)
+            self._downloadpdb(current_entry, filepath)
+        else:
+            messagebox.showerror("错误！", "当前pdb不存在，请检查id是否正确！")
+            return
+
+    def _downloadpdb(self, pdbid, filepath):
+        url = 'http://www.rcsb.org/pdb/files/%s.pdb' % pdbid
+
+        # 末尾如果含有斜杠，去掉斜杠
+        if filepath.endswith("/"):
+            filepath = filepath[0:-1]
+
+        if not os.path.exists(filepath):
+            os.mkdir(filepath)
+
+        filename = filepath + "/%s.pdb" % pdbid
+
+        try:
+            filesize = len(requests.get(url).content)
+        except requests.HTTPError:
+            messagebox.showerror("下载错误", "请求失败，请重试")
+            return
+        except:
+            messagebox.showerror("下载错误", "请求失败，请重试")
+            return
+
+        self.download_progressbar["maximum"] = filesize
+
+        with closing(requests.get(url, stream=True)) as response:
+            chunk_size = 1024  # 单次请求最大值
+            data_length = 0
+            with open(filename, "wb") as file:
+                for data in response.iter_content(chunk_size=chunk_size):
+                    file.write(data)
+                    data_length += len(data)
+                    # 更新进度条
+                    self.download_progressbar["value"] = data_length
+                    self.download_progressbar.update()
+
+                    # 更新标签
+                    percent = int(data_length / filesize * 100)
+                    self.download_state_label.label.configure(text="%i/100" % percent)
+                    self.download_state_label.label.update()
+
+        # 文件下载结束
+        messagebox.showinfo("下载成功！", "成功下载%s" % pdbid)
+
+        # 更新进度条
+        self.download_progressbar["value"] = 0
+        self.download_progressbar.update()
+
+        # 更新标签
+        self.download_state_label.label.configure(text="没有任务")
+        self.download_state_label.label.update()
 
     def extract_ligand(self, event):
         messagebox.showinfo("成功", "提取配体成功")
