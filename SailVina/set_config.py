@@ -5,6 +5,7 @@ import s_entry
 import tooltip, configer, check
 from tkinter import messagebox
 import os
+from s_toplevel import *
 
 
 class SetConfig(object):
@@ -12,28 +13,14 @@ class SetConfig(object):
     def __init__(self, root, config):
         self.root = root
         self.config = config
-        self.top = Toplevel(self.root)
+        self.top = STopLevel(self.root, 400, 130, "设置参数").toplevel
 
         self.choose_python_path_entry = None
         self.choose_obabel_path_entry = None
 
-        self.center()
         self.choose_python()
         self.choose_obabel()
         self.yesorno()
-
-    def center(self):
-        # 居中显示
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-        x = (screen_width / 2) - (400 / 2)
-        y = (screen_height / 2) - (130 / 2)
-        self.top.geometry('%dx%d+%d+%d' % (400, 130, x, y))
-        self.top.resizable(width=False, height=False)
-        self.top.title("设置参数")
-        self.top.lift()
-        self.top.focus()
-        self.top.grab_set()
 
     def choose_python(self):
         y = 10  # python路径

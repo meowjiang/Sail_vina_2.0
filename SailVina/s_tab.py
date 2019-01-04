@@ -9,6 +9,8 @@ import check
 from res.plip.modules import webservices
 import requests
 from contextlib import closing
+from receptor_processor import *
+from s_toplevel import *
 
 
 class Tab1(object):  # 配置config.txt
@@ -427,7 +429,7 @@ class Tab2(object):  # 准备配体
         input_files = self.choose_ligands_entry.textvariable.get()
 
         # 判断输入内容不能包含空格
-        if input_files.count(" ") > 0:
+        if not check.Check.has_space(input_files):
             messagebox.showerror("输入错误！", "输入路径不能包含空格！")
             return
 
@@ -974,7 +976,6 @@ class Tab3(object):  # 准备受体
         self.config = config
 
         self.create_download_receptor()
-        self.create_extract_ligand()
         self.create_prepared_receptor()
 
         # 帮助按钮
@@ -1003,35 +1004,18 @@ class Tab3(object):  # 准备受体
 
         download_pdb_button = s_button.SButton(download_receptor_labelframe,
                                                text="开始下载", x=10, y=60)
+        tooltip.create_tooltip(download_pdb_button.button, "从Protein Data Bank下载受体")
         download_pdb_button.button.bind("<Button-1>", self.downloadpdb)
         self.download_progressbar = Progressbar(download_receptor_labelframe, mode="determinate")
         self.download_progressbar.place(x=100, y=62, width=380)
+        tooltip.create_tooltip(self.download_progressbar, "下载进度")
 
         self.download_state_label = s_label.SLabel(download_receptor_labelframe,
                                                    text="没有下载", x=490, y=60)
 
-    def create_extract_ligand(self):
-        extract_ligand_labelframe = LabelFrame(self.root, text="提取配体")
-        extract_ligand_labelframe.place(x=10, y=130, width=570, height=55)
-
-        ligand_save_path_button = s_button.SButton(extract_ligand_labelframe,
-                                                   text="选择保存的路径", x=10, y=0)
-        tooltip.create_tooltip(ligand_save_path_button.button, "选择提取的配体要保存的位置")
-        self.ligand_save_path_entry = s_entry.SEntry(extract_ligand_labelframe,
-                                                     textvariable=StringVar(),
-                                                     text=configer.Configer.get_para("extract_ligand_path"),
-                                                     x=110, y=3, width=350)
-        tooltip.create_tooltip(self.ligand_save_path_entry.entry, "提取的配体保存的目录，不存在将创建文件夹")
-        ligand_save_path_button.bind_open_dir(entry_text=self.ligand_save_path_entry.textvariable, title="选择要保存的路径")
-
-        save_ligand_button = s_button.SButton(extract_ligand_labelframe, text="提取配体",
-                                              x=470, y=0)
-        save_ligand_button.button.bind("<Button-1>", self.extract_ligand)
-        tooltip.create_tooltip(save_ligand_button.button, "提取受体中的配体")
-
     def create_prepared_receptor(self):
         prepared_receptor_labelframe = LabelFrame(self.root, text="准备受体")
-        prepared_receptor_labelframe.place(x=10, y=190, width=570, height=85)
+        prepared_receptor_labelframe.place(x=10, y=130, width=570, height=110)
 
         choose_raw_receptor_button = s_button.SButton(prepared_receptor_labelframe,
                                                       text="选择受体", x=10, y=0)
@@ -1039,24 +1023,45 @@ class Tab3(object):  # 准备受体
         self.choose_raw_receptor_entry = s_entry.SEntry(prepared_receptor_labelframe,
                                                         textvariable=StringVar(),
                                                         text=configer.Configer.get_para("raw_receptor_path"),
-                                                        x=100, y=3, width=450)
+                                                        x=100, y=3, width=360)
         tooltip.create_tooltip(self.choose_raw_receptor_entry.entry, "选择的受体")
         choose_raw_receptor_button.bind_open_file(entry_text=self.choose_raw_receptor_entry.textvariable,
                                                   title="选择受体pdb文件", file_type="pdb")
+        get_info_button = s_button.SButton(prepared_receptor_labelframe, text="受体信息",
+                                           x=470, y=0)
+        get_info_button.button.bind("<Button-1>", self.prepared_receptor)
+        tooltip.create_tooltip(get_info_button.button, "查看受体信息")
 
+        # 提取配体
+        ligand_save_path_button = s_button.SButton(prepared_receptor_labelframe,
+                                                   text="配体输出路径", x=10, y=30)
+        tooltip.create_tooltip(ligand_save_path_button.button, "选择提取的配体要保存的位置")
+        self.ligand_save_path_entry = s_entry.SEntry(prepared_receptor_labelframe,
+                                                     textvariable=StringVar(),
+                                                     text=configer.Configer.get_para("extract_ligand_path"),
+                                                     x=100, y=33, width=360)
+        tooltip.create_tooltip(self.ligand_save_path_entry.entry, "提取的配体保存的目录，不存在将创建文件夹")
+        ligand_save_path_button.bind_open_dir(entry_text=self.ligand_save_path_entry.textvariable, title="选择要保存的路径")
+
+        save_ligand_button = s_button.SButton(prepared_receptor_labelframe, text="提取配体",
+                                              x=470, y=30)
+        save_ligand_button.button.bind("<Button-1>", self.extract_ligand)
+        tooltip.create_tooltip(save_ligand_button.button, "提取受体中的配体")
+
+        # 准备受体
         save_prepared_receptor_button = s_button.SButton(prepared_receptor_labelframe,
-                                                         text="输出路径", x=10, y=30)
+                                                         text="输出路径", x=10, y=60)
         tooltip.create_tooltip(save_prepared_receptor_button.button, "选择准备后的受体保存路径")
         self.choose_prepare_output_path = s_entry.SEntry(prepared_receptor_labelframe,
                                                          textvariable=StringVar(),
                                                          text=configer.Configer.get_para("preped_path"),
-                                                         x=100, y=33, width=360)
+                                                         x=100, y=63, width=360)
         tooltip.create_tooltip(self.choose_prepare_output_path.entry, "准备受体后的输出目录")
         save_prepared_receptor_button.bind_open_dir(self.choose_prepare_output_path.textvariable,
                                                     title="选择输出目录")
 
         prepare_receptor_button = s_button.SButton(prepared_receptor_labelframe, text="准备受体",
-                                                   x=470, y=30)
+                                                   x=470, y=60)
         prepare_receptor_button.button.bind("<Button-1>", self.prepared_receptor)
         tooltip.create_tooltip(prepare_receptor_button.button, "开始准备受体")
 
@@ -1127,7 +1132,29 @@ class Tab3(object):  # 准备受体
         self.download_state_label.label.update()
 
     def extract_ligand(self, event):
-        messagebox.showinfo("成功", "提取配体成功")
+        receptor = self.choose_raw_receptor_entry.textvariable.get()  # 获取受体
+        output_path = self.ligand_save_path_entry.textvariable.get()  # 配体输出路径
+
+        if not receptor.endswith("pdb"):
+            messagebox.showerror("错误！", "受体只支持pdb格式！")
+            return
+        if check.Check.check_path(receptor):
+            messagebox.showerror("错误", "受体路径不能包含空格！")
+            return
+        if check.Check.check_path(output_path):
+            messagebox.showerror("错误", "配体输出路径不能包含空格！")
+            return
+        self._extract_ligand(receptor, output_path)
+        # messagebox.showinfo("成功", "提取配体成功")
+
+    def _extract_ligand(self, pdb, output_path):
+        self.structure = ReceptorProcessor.get_structure(pdb)
+        self.len_model = ReceptorProcessor.get_model_nums(self.structure)
+        self.choose_model()
+
+    def choose_model(self):
+        self.top = STopLevel(self.root, 400, 300, "选择模型").toplevel
+        s_label.SLabel(self.top, "当前受体有%s个模型" % self.len_model, 10, 10)
 
     def prepared_receptor(self, event):
         messagebox.showinfo("成功", "成功准备受体")
@@ -1260,13 +1287,13 @@ class Tab5(object):  # 复合
             return
 
         # 不能包括空格
-        if input_ligands_full.count(" ") > 0:
+        if check.Check.has_space(input_ligands_full):
             messagebox.showerror("错误！", "配体路径不能包含空格！")
             return
-        if input_receptor.count(" ") > 0:
+        if check.Check.has_space(input_receptor):
             messagebox.showerror("错误！", "受体路径不能包含空格！")
             return
-        if output_dir.count(" ") > 0:
+        if check.Check.has_space(output_dir):
             messagebox.showerror("错误！", "输出路径不能包含空格！")
             return
 

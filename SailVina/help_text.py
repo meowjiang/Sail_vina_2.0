@@ -22,7 +22,7 @@ TAB2_TEXT = "本界面用于进行对接配体的格式转换\n\n" \
             "等问题。所以当转换成pdbqt文件时，先通过obabel转换成pdb文件，再通过adt的方法转换成pdbqt格式，" \
             "所以进度条会显示两遍。" \
 
-TAB3_TEXT = "tab3帮助"
+TAB3_TEXT = "准备受体帮助"
 
 TAB4_TEXT = "本界面用于调用vina进行分子对接\n\n" \
             "操作步骤\n" \

@@ -22,34 +22,12 @@ class Configer(object):
                                 "exhaustiveness=8\n" \
                                 "num_modes=9\n" \
                                 "energy_range=3\n" \
-                                "read_config=\n" \
-                                "choose_raw_ligand=\n" \
-                                "output_config=\n" \
-                                "choose_ligands=\n" \
-                                "input_format=\n" \
-                                "output_format\n" \
                                 "gen3d=1\n" \
                                 "pH=7.4\n" \
                                 "is_minimize=1\n" \
-                                "minimize=\n" \
-                                "ligand_output_dir=\n" \
-                                "python_path=\n" \
-                                "obabel_path=\n" \
-                                "choose_docking_ligands=\n" \
-                                "choose_docking_proteins=\n" \
-                                "choose_docking_output=\n" \
                                 "docking_times=1\n" \
-                                "complex_ligand_format=\n" \
                                 "complex_ligand_num=1\n" \
-                                "choose_complex_ligands=\n" \
-                                "remain_ligand=0\n" \
-                                "choose_complex_proteins=\n" \
-                                "choose_complex_output=\n" \
-                                "pdbid=\n" \
-                                "pdb_path=\n" \
-                                "extract_ligand_path=\n" \
-                                "raw_receptor_path=\n" \
-                                "preped_path=\n"
+                                "remain_ligand=0\n"
                 f.write(initial_value)
 
     @staticmethod
