@@ -6,11 +6,15 @@ import os
 import shutil
 import time
 import check
-from res.plip.modules import webservices
 import requests
 from contextlib import closing
 from receptor_processor import *
 from s_toplevel import *
+import webbrowser
+
+pdbqt_to_pdb_path = os.path.realpath(__file__) + "/../res/pdbqt_to_pdb.py"
+pdb_to_pdbqt_path = os.path.realpath(__file__) + "/../res/prepare_ligand4.py"
+prepare_receptor4_path = os.path.realpath(__file__) + "/../res/prepare_receptor4.py"
 
 
 class Tab1(object):  # 配置config.txt
@@ -480,8 +484,6 @@ class Tab2(object):  # 准备配体
             return
 
         output_ligands = []
-        pdbqt_to_pdb_path = os.path.realpath(__file__) + "/../res/pdbqt_to_pdb.py"
-        pdb_to_pdbqt_path = os.path.realpath(__file__) + "/../res/prepare_ligand4.py"
 
         for ligand in input_ligands:
             ligand_name = ligand.split("/")[-1].split(".")[0] + "." + output_format
@@ -971,9 +973,24 @@ class Tab4(object):  # 分子对接
 
 class Tab3(object):  # 准备受体
 
+    chains = None
+
     def __init__(self, tab, config):
         self.root = tab
         self.config = config
+
+        # 结构对象
+        self.structure = None
+        self.model_name = None
+        self.chain_name = None
+        self.ligand_name = None
+
+        # listbox控件
+        self.model_list = None
+        self.chain_list = None
+        self.ligand_list = None
+
+        self.output_path = None
 
         self.create_download_receptor()
         self.create_prepared_receptor()
@@ -1029,7 +1046,7 @@ class Tab3(object):  # 准备受体
                                                   title="选择受体pdb文件", file_type="pdb")
         get_info_button = s_button.SButton(prepared_receptor_labelframe, text="受体信息",
                                            x=470, y=0)
-        get_info_button.button.bind("<Button-1>", self.prepared_receptor)
+        get_info_button.button.bind("<Button-1>", self.getinfo)
         tooltip.create_tooltip(get_info_button.button, "查看受体信息")
 
         # 提取配体
@@ -1050,7 +1067,7 @@ class Tab3(object):  # 准备受体
 
         # 准备受体
         save_prepared_receptor_button = s_button.SButton(prepared_receptor_labelframe,
-                                                         text="输出路径", x=10, y=60)
+                                                         text="受体输出路径", x=10, y=60)
         tooltip.create_tooltip(save_prepared_receptor_button.button, "选择准备后的受体保存路径")
         self.choose_prepare_output_path = s_entry.SEntry(prepared_receptor_labelframe,
                                                          textvariable=StringVar(),
@@ -1065,13 +1082,49 @@ class Tab3(object):  # 准备受体
         prepare_receptor_button.button.bind("<Button-1>", self.prepared_receptor)
         tooltip.create_tooltip(prepare_receptor_button.button, "开始准备受体")
 
+    def getinfo(self, event):
+        receptor = self.choose_raw_receptor_entry.textvariable.get()  # 获取受体
+        self.output_path = self.ligand_save_path_entry.textvariable.get()  # 配体输出路径
+
+        if not receptor.endswith("pdb"):
+            messagebox.showerror("错误！", "受体只支持pdb格式！")
+            return
+        if check.Check.check_path(receptor):
+            messagebox.showerror("错误", "受体路径不能包含空格！")
+            return
+
+        structure = ReceptorProcessor.get_structure(receptor)
+
+        window = STopLevel(self.root, 500, 400, "PDB信息").toplevel
+        wraplength = 480
+
+        s_name = structure.header["name"]
+        s_label.SLabel(window, "受体名称:\n" + s_name, 10, 10).label.configure(wraplength=wraplength)
+
+        s_redate = structure.header["release_date"]
+        s_label.SLabel(window, "发布时间:\n" + s_redate, 10, 70).label.configure(wraplength=wraplength)
+
+        s_method = structure.header["structure_method"]
+        s_label.SLabel(window, "方法:\n" + s_method, 10, 130).label.configure(wraplength=wraplength)
+
+        s_resolution = str(structure.header["resolution"])
+        s_label.SLabel(window, "分辨率:\n" + s_resolution + "埃", 10, 190).label.configure(wraplength=wraplength)
+
+        s_refe = structure.header["journal_reference"]
+        reference = s_label.SLabel(window, "参考文献:\n" + s_refe, 10, 250).label
+        reference.configure(wraplength=wraplength)
+        doi_url = "http://www.doi.org/" + s_refe.strip().split(" ")[-1]
+        open_url_button = s_button.SButton(window, "打开文献网页", 75, 245)
+        open_url_button.button.configure(command=lambda: webbrowser.open(doi_url))
+        tooltip.create_tooltip(open_url_button.button, "使用默认浏览器打开文献链接")
+
     def downloadpdb(self, event):
         pdbid = self.pdbid_entry.textvariable.get()
         filepath = self.pdb_save_path_entry.textvariable.get()
         if len(pdbid) != 4:
             messagebox.showerror("错误！", "请输入四位pdb代码！")
             return
-        state, current_entry = webservices.check_pdb_status(pdbid)
+        state, current_entry = check_pdb_status(pdbid)
         if state == "CURRENT":
             self._downloadpdb(current_entry, filepath)
         elif state == "OBSOLETE":
@@ -1094,7 +1147,7 @@ class Tab3(object):  # 准备受体
         filename = filepath + "/%s.pdb" % pdbid
 
         try:
-            filesize = len(requests.get(url).content)
+            file_size = len(requests.get(url).content)
         except requests.HTTPError:
             messagebox.showerror("下载错误", "请求失败，请重试")
             return
@@ -1102,7 +1155,7 @@ class Tab3(object):  # 准备受体
             messagebox.showerror("下载错误", "请求失败，请重试")
             return
 
-        self.download_progressbar["maximum"] = filesize
+        self.download_progressbar["maximum"] = file_size
 
         with closing(requests.get(url, stream=True)) as response:
             chunk_size = 1024  # 单次请求最大值
@@ -1116,7 +1169,7 @@ class Tab3(object):  # 准备受体
                     self.download_progressbar.update()
 
                     # 更新标签
-                    percent = int(data_length / filesize * 100)
+                    percent = int(data_length / file_size * 100)
                     self.download_state_label.label.configure(text="%i/100" % percent)
                     self.download_state_label.label.update()
 
@@ -1133,7 +1186,7 @@ class Tab3(object):  # 准备受体
 
     def extract_ligand(self, event):
         receptor = self.choose_raw_receptor_entry.textvariable.get()  # 获取受体
-        output_path = self.ligand_save_path_entry.textvariable.get()  # 配体输出路径
+        self.output_path = self.ligand_save_path_entry.textvariable.get()  # 配体输出路径
 
         if not receptor.endswith("pdb"):
             messagebox.showerror("错误！", "受体只支持pdb格式！")
@@ -1141,23 +1194,215 @@ class Tab3(object):  # 准备受体
         if check.Check.check_path(receptor):
             messagebox.showerror("错误", "受体路径不能包含空格！")
             return
-        if check.Check.check_path(output_path):
+        if check.Check.check_path(self.output_path):
             messagebox.showerror("错误", "配体输出路径不能包含空格！")
             return
-        self._extract_ligand(receptor, output_path)
-        # messagebox.showinfo("成功", "提取配体成功")
+        self._extract_ligand(receptor)
 
-    def _extract_ligand(self, pdb, output_path):
+    def _extract_ligand(self, pdb):
         self.structure = ReceptorProcessor.get_structure(pdb)
-        self.len_model = ReceptorProcessor.get_model_nums(self.structure)
+
+        top = STopLevel(self.root, 300, 250, "提取配体").toplevel
+
+        # 创建切换卡
+        self.notebook = Notebook(top)
+
+        # 创建每个选项卡
+        self.choose_model_tab = Frame(self.notebook)
+        self.choose_chain_tab = Frame(self.notebook)
+        self.choose_ligand_tab = Frame(self.notebook)
+
+        # 添加选项卡
+        self.notebook.add(self.choose_model_tab, text="model")
+        self.notebook.add(self.choose_chain_tab, text="chain")
+        self.notebook.add(self.choose_ligand_tab, text="ligand")
+
+        # 选项卡创建内容
         self.choose_model()
+        self.choose_chain()
+        self.choose_ligand()
+
+        self.notebook.place(x=10, y=10, width=290, height=230)
+
+    def jump_model(self, event):
+
+        # 禁用后两个
+        self.notebook.tab(1, state="disable")
+        self.notebook.tab(0, state="normal")
+        self.notebook.tab(2, state="disable")
+
+        self.notebook.select(tab_id=0)
 
     def choose_model(self):
-        self.top = STopLevel(self.root, 400, 300, "选择模型").toplevel
-        s_label.SLabel(self.top, "当前受体有%s个模型" % self.len_model, 10, 10)
+        # 禁用后两个
+        self.notebook.tab(1, state="disable")
+        self.notebook.tab(2, state="disable")
+
+        self.model_list = Listbox(self.choose_model_tab, width=30, height=10)
+
+        model_ids = ReceptorProcessor.get_model_ids(self.structure)
+        Tab3.refresh_listbox(model_ids, self.model_list)
+
+        self.model_list.place(x=10, y=10, width=255, height=150)
+        scroll = Scrollbar(self.model_list)
+        scroll.pack(side=RIGHT, fill=Y)
+        self.model_list.configure(yscrollcommand=scroll.set)
+        scroll.config(command=self.model_list.yview)
+
+        next_button = s_button.SButton(self.choose_model_tab, "下一步", 165, 170)
+        next_button.button.bind("<Button-1>", self.jump_chain)
+
+    def jump_chain(self, event):
+        self.model_name = self.model_list.get(ACTIVE)
+        model = self.structure[self.model_name]
+        chain_names = ReceptorProcessor.get_chain_ids(model)
+        Tab3.refresh_listbox(chain_names, self.chain_list)
+
+        # 禁用后两个
+        self.notebook.tab(0, state="disable")
+        self.notebook.tab(1, state="normal")
+        self.notebook.tab(2, state="disable")
+
+        self.notebook.select(tab_id=1)
+
+    def choose_chain(self):
+        self.chain_list = Listbox(self.choose_chain_tab, width=30, height=10)
+        self.chain_list.place(x=10, y=10, width=255, height=150)
+        scroll = Scrollbar(self.chain_list)
+        scroll.pack(side=RIGHT, fill=Y)
+        self.chain_list.configure(yscrollcommand=scroll.set)
+        scroll.config(command=self.chain_list.yview)
+
+        pre_button = s_button.SButton(self.choose_chain_tab, "上一步", 10, 170)
+        pre_button.button.bind("<Button-1>", self.jump_model)
+
+        next_button = s_button.SButton(self.choose_chain_tab, "下一步", 165, 170)
+        next_button.button.bind("<Button-1>", self.jump_ligand)
+
+    def jump_ligand(self, event):
+        self.chain_name = self.chain_list.get(ACTIVE)
+        chain = self.structure[self.model_name][self.chain_name]
+        het_names = ReceptorProcessor.get_het_ids(chain)
+        Tab3.refresh_listbox(het_names, self.ligand_list)
+
+        # 禁用两个
+        self.notebook.tab(0, state="disable")
+        self.notebook.tab(2, state="normal")
+        self.notebook.tab(1, state="disable")
+
+        self.notebook.select(tab_id=2)
+
+    def choose_ligand(self):
+        self.ligand_list = Listbox(self.choose_ligand_tab, width=30, height=10)
+        self.ligand_list.place(x=10, y=10, width=255, height=150)
+        scroll = Scrollbar(self.ligand_list)
+        scroll.pack(side=RIGHT, fill=Y)
+        self.ligand_list.configure(yscrollcommand=scroll.set)
+        scroll.config(command=self.ligand_list.yview)
+
+        pre_button = s_button.SButton(self.choose_ligand_tab, "上一步", 10, 170)
+        pre_button.button.bind("<Button-1>", self.jump_chain)
+
+        next_button = s_button.SButton(self.choose_ligand_tab, "提取配体", 165, 170)
+        tooltip.create_tooltip(next_button.button, "提取选中的配体为pdbqt格式")
+        next_button.button.bind("<Button-1>", self.save_ligand)
+
+    def save_ligand(self, event):
+        self.ligand_name = self.ligand_list.get(ACTIVE)
+
+        python_path = configer.Configer.get_para("python_path")
+        if not check.Check.check_python(python_path):
+            return
+
+        LigandExtractor(self.structure, self.model_name,
+                        self.chain_name, self.ligand_name).extract_ligand(self.output_path)
+
+        input_ligand = self.output_path + "/%s_%s.pdb" % (self.chain_name, self.ligand_name)
+        output_ligand = self.output_path + "/%s_%s.pdbqt" % (self.chain_name, self.ligand_name)
+        command = "%s %s -l %s -o %s" % (python_path, pdb_to_pdbqt_path,
+                                         input_ligand, output_ligand)
+        os.system(command)
+        os.remove(input_ligand)
+        messagebox.showinfo("提取成功！", "成功提取配体！")
+
+    @staticmethod
+    def refresh_listbox(content_list: list, list_box: Listbox):
+        list_box.delete(0, END)
+        for content in content_list:
+            list_box.insert(END, content)
 
     def prepared_receptor(self, event):
-        messagebox.showinfo("成功", "成功准备受体")
+        input_file = self.choose_raw_receptor_entry.textvariable.get()
+        output_path = self.choose_prepare_output_path.textvariable.get()
+        output_file = output_path + "/preped.pdbqt"
+        python_path = configer.Configer.get_para("python_path")
+
+        if not check.Check.check_python(python_path):
+            return
+
+        if check.Check.check_path(input_file) or check.Check.check_path(output_path):
+            messagebox.showinfo("错误！", "输入文件不能包含空格")
+            return
+
+        if not input_file.endswith(".pdb"):
+            messagebox.showinfo("错误!", "只支持输入pdb文件！")
+            return
+
+        message = ChainExtractor.judge_homo(input_file)
+        if message:
+            warning = ""
+            for content in message:
+                warning += content + "\n"
+            if messagebox.askyesno("检测到同源链", "是否保留只保留特定链？（可多选）\n" + warning):
+                structure = ReceptorProcessor.get_structure(input_file)
+                chains_ids = ReceptorProcessor.get_chain_ids(structure[0])
+
+                top = STopLevel(self.root, 275, 205, "选择要保存的链").toplevel
+
+                chains_list = Listbox(top, width=30, height=10, selectmode=EXTENDED)
+                chains_list.place(x=10, y=10, width=255, height=150)
+                self.refresh_listbox(chains_ids, chains_list)
+                scroll = Scrollbar(chains_list)
+                scroll.pack(side=RIGHT, fill=Y)
+                chains_list.configure(yscrollcommand=scroll.set)
+                scroll.config(command=chains_list.yview)
+
+                def extract_chains():
+                    Tab3.chains = []
+                    selections = chains_list.curselection()
+                    for select in selections:
+                        Tab3.chains.append(chains_list.get(select))
+                    top.destroy()
+
+                save_button = s_button.SButton(top, "提取链", 10, 170)
+                save_button.button.configure(command=extract_chains)
+
+                def cancel():
+                    Tab3.chains = None
+                    top.destroy()
+
+                cancel_button = s_button.SButton(top, "取消", 165, 170)
+                cancel_button.button.configure(command=cancel)
+
+                top.protocol("WM_DELETE_WINDOW", cancel)
+
+                self.root.wait_window(top)
+            else:
+                Tab3.chains = []
+        else:
+            messagebox.showinfo("没有检测到同源链", "受体将自动保存为preped.pdbqt文件")
+            Tab3.chains = []
+
+        if Tab3.chains is None:
+            return
+
+        structure = ReceptorProcessor.get_structure(input_file)
+        ChainExtractor.extract_chain(structure, Tab3.chains, output_path)
+
+        pdb_input = output_path + "/preped.pdb"
+        cmd = "%s %s -r %s -o %s -e" % (python_path, prepare_receptor4_path, pdb_input, output_file)
+        os.system(cmd)
+        messagebox.showinfo("成功", "成功准备受体！\n注意：自动准备会删除DNA等非标准残基，结果仅供参考。")
 
     def save_para(self):
         self.config.para_dict["pdbid"] = self.pdbid_entry.textvariable.get()
@@ -1335,7 +1580,6 @@ class Tab5(object):  # 复合
             return
 
         python_path = configer.Configer.get_para("python_path")
-        pdbqt_to_pdb_path = os.path.realpath(__file__) + "/../res/pdbqt_to_pdb.py"
 
         # 检查路径是否正确
         if not check.Check.check_python(python_path):
@@ -1426,7 +1670,7 @@ class Tab5(object):  # 复合
             output_name = ligand.split("/")[-1].split(".")[0] + "_" + input_receptor.split("/")[-1].split(".")[
                 0] + ".pdb"
             output = output_dir + "/" + output_name
-            command = "%s %s %s -O %s -j" % (obabel_path, ligand, input_pdb, output)
+            command = "%s %s %s -j -O %s" % (obabel_path, ligand, input_pdb, output)
             os.system(command)
 
         # 如果不保留提取配体，删除提取配体
@@ -1458,10 +1702,9 @@ class Tab5(object):  # 复合
 
 class Tab6(object):
 
-    def __init__(self, tab, config):
-        self.config = config
-        self.label1 = Label(tab, text="开发中……")
-        self.label1.grid()
+    def __init__(self, tab):
+        self.label1 = Label(tab, text=help_text.TAB6_TEXT, wraplength=565)
+        self.label1.place(x=10, y=10)
 
 
 class Tab7(object):

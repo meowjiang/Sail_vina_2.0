@@ -1,6 +1,24 @@
 from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB import Structure, Model, Chain, Select
 from Bio.PDB import PDBIO
+from Bio import SeqIO
+import lxml.etree as et
+from urllib.request import urlopen
+
+
+def check_pdb_status(pdbid):
+    """Returns the status and up-to-date entry in the PDB for a given PDB ID"""
+    url = 'http://www.rcsb.org/pdb/rest/idStatus?structureId=%s' % pdbid
+    xmlf = urlopen(url)
+    xml = et.parse(xmlf)
+    xmlf.close()
+    status = None
+    current_pdbid = pdbid
+    for df in xml.xpath('//record'):
+        status = df.attrib['status']  # Status of an entry can be either 'UNKWOWN', 'OBSOLETE', or 'CURRENT'
+        if status == 'OBSOLETE':
+            current_pdbid = df.attrib['replacedBy']  # Contains the up-to-date PDB ID for obsolete entries
+    return [status, current_pdbid.lower()]
 
 
 class ReceptorProcessor(object):
@@ -8,17 +26,9 @@ class ReceptorProcessor(object):
     @staticmethod
     def get_structure(pdb_path: str):
         parse = PDBParser(PERMISSIVE=1)
-        pdb_id = pdb_path.strip("/")[-1].strip(".")[0]
+        pdb_id = pdb_path.split("/")[-1].split(".")[0]
         structure = parse.get_structure(pdb_id, pdb_path)
         return structure
-
-    @staticmethod
-    def get_model_nums(structure: Structure):
-        times = 0
-        models = structure.get_models()
-        for model in models:
-            times += 1
-        return times
 
     @staticmethod
     def get_model_ids(structure: Structure):
@@ -29,14 +39,6 @@ class ReceptorProcessor(object):
         return model_list
 
     @staticmethod
-    def get_chain_nums(model: Model):
-        times = 0
-        chains = model.get_chains()
-        for chain in chains:
-            times += 1
-        return times
-
-    @staticmethod
     def get_chain_ids(model: Model):
         chains = model.get_chains()
         chain_list = []
@@ -45,29 +47,19 @@ class ReceptorProcessor(object):
         return chain_list
 
     @staticmethod
-    def get_het_nums(chain: Chain):
-        times = 0
-        residues = chain.get_residues()
-        for residue in residues:
-            residue_id = residue.get_id()
-            hetfield = residue_id[0]
-            if hetfield != " " and hetfield != "W":
-                times += 1
-        return times
-
-    @staticmethod
     def get_het_ids(chain: Chain):
         residues = chain.get_residues()
         residue_list = []
         for residue in residues:
             residue_id = residue.get_id()
-            hetfield = residue_id[0]
-            if hetfield != " " and hetfield != "W":
-                residue_list.append(hetfield)
+            het_field = residue_id[0]
+            het_name = residue.get_resname()
+            if het_field != " " and het_field != "W":
+                residue_list.append(het_name)
         return residue_list
 
     @staticmethod
-    def get_het_idname(hetname, chain: Chain):
+    def get_het_id(hetname, chain: Chain):
         residues = chain.get_residues()
         for residue in residues:
             residue_id = residue.get_id()
@@ -130,7 +122,68 @@ class LigandExtractor(object):
         io.save(save_path + "/%s_%s.pdb" % (LigandExtractor.chain_name, LigandExtractor.residue_name), LigandSelect())
 
 
+class ChainExtractor(object):
+    structure = None
+    chains = None
+
+    @staticmethod
+    def judge_homo(structure: str):
+        message = []
+        with open(structure, "rU") as handle:
+            last_seq = None
+            last_id = None
+            seqs = SeqIO.parse(handle, "pdb-seqres")
+            for record in seqs:
+                seq = record.seq
+                if seq == last_seq:
+                    message.append(record.id.split(":")[-1] + "同源" + last_id)
+                else:
+                    last_seq = seq
+                    last_id = record.id.split(":")[-1]
+        if len(message) == 0:
+            return False
+        else:
+            return message
+
+    @staticmethod
+    def extract_chain(structure: Structure, chain_ids: list, output_path: str):
+
+        output_file = output_path + "/preped.pdb"
+        ChainExtractor.structure = structure
+
+        if len(chain_ids) == 0:
+            io = PDBIO()
+            io.set_structure(structure)
+            io.save(output_file)
+            return
+
+        class ChainSelect(Select):
+
+            def accept_model(self, model):
+                if model == ChainExtractor.structure[0]:
+                    return 1
+                else:
+                    return 0
+
+            def accept_chain(self, chain):
+                chains = []
+                for chain_id in chain_ids:
+                    chains.append(ChainExtractor.structure[0][chain_id])
+                if chain in chains:
+                    return 1
+                else:
+                    return 0
+
+        io = PDBIO()
+        io.set_structure(structure)
+        io.save(output_file, ChainSelect())
+
+
 if __name__ == '__main__':
-    s = PDBParser().get_structure("3ln1", "D:/Desktop/3ln1.pdb")
-    extractor = LigandExtractor(s, 0, "A", "CEL")
-    extractor.extract_ligand("D:/Desktop")
+    # s = PDBParser().get_structure("3ln1", "D:/Desktop/3ln1.pdb")
+    # extractor = LigandExtractor(s, 0, "A", "CEL")
+    # extractor.extract_ligand("D:/Desktop")
+    chain_ex = ChainExtractor("D:/Desktop/2az5.pdb", "D:/Desktop")
+    judge = chain_ex.judge_homo()
+    if judge:
+        print(judge)
