@@ -1,7 +1,11 @@
 from tkinter import *
-from tkinter.ttk import *
-import configer, s_tab, tooltip, set_config
 from tkinter import messagebox
+from tkinter.ttk import *
+
+import configer
+import s_tab
+import set_config
+import tooltip
 
 
 class MainWindows(object):

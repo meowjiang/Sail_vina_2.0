@@ -433,7 +433,7 @@ class Tab2(object):  # 准备配体
         input_files = self.choose_ligands_entry.textvariable.get()
 
         # 判断输入内容不能包含空格
-        if not check.Check.has_space(input_files):
+        if check.Check.has_space(input_files):
             messagebox.showerror("输入错误！", "输入路径不能包含空格！")
             return
 
@@ -568,7 +568,7 @@ class Tab2(object):  # 准备配体
                 self.progress_label.label.configure(text="没有任务")
                 return
 
-        elif input_format == "pdb" and output_format == "pdbqt":  # pdb->pdbqt
+        elif input_format == "pdb" or input_format == "mol2" and output_format == "pdbqt":  # pdb->pdbqt
             print("使用ADT脚本将pdb转换成pdbqt")
             i = 0
             while i < len(input_ligands):
