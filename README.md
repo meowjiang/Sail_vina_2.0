@@ -74,7 +74,7 @@ D:/test_sailvina/Docking_output
     - 点击"选择文件夹"，选择D:/test_sailvina/Ligands/mol
     - 输出选项中，输出格式选择pdbqt，其余保持默认。
     - 点击"选择输出文件夹", 选择D:/test_sailvina/Ligands/pdbqt。
-    - 点击"开始转换"
+    - 点击"开始转换"  
     ![开始转换](./readme_pic/preped_ligands.jpg)
 5. 分子对接  
 分子对接界面中  
