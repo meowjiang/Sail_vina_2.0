@@ -1,4 +1,4 @@
-## Sail_vina_2.0
+## Sail_vina_2.5
 Autodock Vina对接GUI界面
 
 开发中……，已经完成：  
@@ -14,11 +14,7 @@ Autodock Vina对接GUI界面
 
 ---
 ### 软件的安装：  
-方法一：下载[main.zip](https://stmailhbtcmeducn-my.sharepoint.com/:u:/g/personal/1731701280_stmail_hbtcm_edu_cn/EZz41yb7CmxNvV9nDrWdVd4BbnDhGj5Dq9NwX1LYgkwZLg?e=dE3jFn)到需要安装的目录，解压，直接运行内部的main.exe文件即可。  
-软件界面：  
-![界面](./readme_pic/main_windows.jpg)
-**注意：本软件的解压路径不要包含空格和中文！**  
-方法二：克隆本项目到本地，在SailVina中用python运行main.py
+预览版项目，克隆本项目到本地，在SailVina中用python运行main.py
 - 需要requests（下载pdb）、biopython（准备受体）模块，使用pip安装即可。
   
 系统需求：  
