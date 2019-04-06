@@ -17,7 +17,8 @@ pdb_to_pdbqt_path = os.path.realpath(__file__) + "/../res/prepare_ligand4.py"
 prepare_receptor4_path = os.path.realpath(__file__) + "/../res/prepare_receptor4.py"
 
 
-class Tab1(object):  # 配置config.txt
+# 配置config.txt
+class Tab1(object):
 
     def __init__(self, tab: Frame, config: configer.Configer) -> object:
         """
@@ -277,7 +278,8 @@ class Tab1(object):  # 配置config.txt
         self.config.para_dict["output_config"] = self.output_config_entry.textvariable.get()
 
 
-class Tab2(object):  # 准备配体
+# 准备配体
+class Tab2(object):
 
     def __init__(self, tab, config):
         self.root = tab
@@ -721,7 +723,8 @@ class Tab2(object):  # 准备配体
                         self.progress_label.label.configure(text="没有任务")
 
 
-class Tab4(object):  # 分子对接
+# 分子对接
+class Tab4(object):
 
     def __init__(self, tab, config):
         self.root = tab
@@ -971,7 +974,8 @@ class Tab4(object):  # 分子对接
         self.config.para_dict["docking_times"] = self.times_entry.textvariable.get()
 
 
-class Tab3(object):  # 准备受体
+# 准备受体
+class Tab3(object):
 
     chains = None
 
@@ -1412,7 +1416,8 @@ class Tab3(object):  # 准备受体
         self.config.para_dict["preped_path"] = self.choose_prepare_output_path.textvariable.get()
 
 
-class Tab5(object):  # 复合
+# 复合
+class Tab5(object):
 
     def __init__(self, tab, config):
         self.root = tab
@@ -1700,6 +1705,7 @@ class Tab5(object):  # 复合
         self.config.para_dict["choose_complex_output"] = self.choose_output_entry.textvariable.get()
 
 
+# 关于
 class Tab6(object):
 
     def __init__(self, tab):
@@ -1715,6 +1721,7 @@ class Tab7(object):
         self.label1.grid()
 
 
+# 提取分数
 class Tab8(object):
 
     def __init__(self, tab, config):
